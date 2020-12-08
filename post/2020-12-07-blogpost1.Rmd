@@ -1,0 +1,12 @@
+---
+title: Blogpost1
+author: ''
+date: '2020-12-07'
+slug: blogpost1
+categories: []
+tags: []
+description: ''
+---
+[Link to project 1](/projects/project1/)
+
+[Link to google](https://www.google.com)
