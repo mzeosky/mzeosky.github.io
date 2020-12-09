@@ -8,14 +8,15 @@
     <language>en-US</language>
     <lastBuildDate>Mon, 07 Dec 2020 00:00:00 +0000</lastBuildDate><atom:link href="/index.xml" rel="self" type="application/rss+xml" />
     <item>
-      <title>Blogpost1</title>
-      <link>/post/2020/12/07/blogpost1/</link>
+      <title>Python use</title>
+      <link>/post/2020/12/07/python-use/</link>
       <pubDate>Mon, 07 Dec 2020 00:00:00 +0000</pubDate>
       
-      <guid>/post/2020/12/07/blogpost1/</guid>
-      <description>Throughout Computational Biology I have been primarily strengthening my understanding of using the language R, which can be seen in these two projects linked on my site. Link to project 1
+      <guid>/post/2020/12/07/python-use/</guid>
+      <description>Throughout Computational Biology I have been primarily strengthening my understanding of using the language R, which can be seen in these two projects linked on my site.
+Link to project 1
 Link to project 2
-However, more recently I have been learning how to tie in Python as well in order to complement both languages. Something we have recently been learning about is regular expressions, which can be seen below.</description>
+However, more recently I have been learning how to tie in Python as well in order to complement both languages. Something we have recently been learning about is regular expressions and how to use them to search through large amounts of data, which can be seen below.</description>
     </item>
     
     <item>

@@ -1,15 +1,38 @@
 ---
-title: Blogpost1
+title: "Python use"
 author: ''
 date: '2020-12-07'
-slug: blogpost1
-categories: []
-tags: []
 description: ''
+slug: python use
+tags: []
+categories: []
 ---
 Throughout Computational Biology I have been primarily strengthening my understanding of using the language R, which can be seen in these two projects linked on my site.
+
 [Link to project 1](/project/project1/)
 
 [Link to project 2](/project/project2/)
 
-However, more recently I have been learning how to tie in Python as well in order to complement both languages. Something we have recently been learning about is regular expressions, which can be seen below.
+However, more recently I have been learning how to tie in Python as well in order to complement both languages. Something we have recently been learning about is regular expressions and how to use them to search through large amounts of data, which can be seen below.
+
+```{python}
+#from IPython.core.interactiveshell import InteractiveShell
+#InteractiveShell.ast_node_interactivity = "all"
+import re
+
+string4="<http://www.classmates.com/go/e/200988231/CC123101BT/CM00>  <http://graphics.classmates.com/graphics/spacer.gif>  <http://graphics.classmates.com/graphics/sp> \
+You have received this email because the requester specified you as their Manager. Please click http://itcapps.corp.enron.com/srrs/auth/emailLink.asp?ID=000000000053239&Page=Approval> to review and act upon this request.     Request ID          : 000000000053239 Request Create Date\
+ronOnline.   The following User ID and Password will give you access to live prices on the web-site http://www.enrononline.com.  User ID: ADM40601 Password: WELCOME!   (note these are case sensitive)    Please keep your User I\
+<http://www.classmates.com/go/e/200988231/CC122401BC/CM00>  <http://graphics.classmates.com/graphics/spacer.gif>  <http://graphics.classmates.com/graphics/sp\
+http://www.btinternet.com/~pir8/arnie/\
+n, just click on the following hyperlink and complete the order form by Tuesday February 12, 2002.  http://zzz1.net/rd/rd.asp?ZXU=562&ZXD=1471085&UID=1471085  If you cannot link directly to the web site, simply cut and paste the address listed above into yo\
+been successful getting in the group. To access the group should go to your web browser and type in http://www.egroups.com  The screen should show that you are a member of smu-betas group. When you replied to the original \
+mber and password. For more details on how to log-on to eHRonline, see step-by-step instructions at http://isc.enron.com/site/doclibrary/user/ 2. Navigate to the pay advice using the following navigation menus: ? Pay Information ? Paycheck I\
+In addition to World Markets Energy information  <http://esource.enron.com/worldmarket.asp> and Country Analysis and Forecasting, <http://esource.enron.com/worldmarket_CountryAnalysis.asp>  \
+<http://ad.doubleclick.net/clk;3549492;6600300;c?http://www.sportingbetusa.com/english/casino/casinonew-fr.asp?isLogged=notlogged> A WEEKEND PAIR-A-DICE <http://ad.doubleclick.net/clk;3549492;6600300;c?http://www.sportingbetusa.c \
+Mr. Skilling:  Your P number is P00500599.  For your convenience, you can also go to http://isc.enron.com/site/ under"
+
+
+re.findall(r'http://[\'"]?[^\>" "]+',string4)
+```
+First, it recieves a large amount of text, and traversese the entirety of it while printing the determined website urls.
