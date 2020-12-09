@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Posts on Chris Turner</title>
+    <title>Posts on Michael Zeosky</title>
     <link>/post/</link>
-    <description>Recent content in Posts on Chris Turner</description>
+    <description>Recent content in Posts on Michael Zeosky</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-US</language>
     <lastBuildDate>Mon, 07 Dec 2020 00:00:00 +0000</lastBuildDate><atom:link href="/post/index.xml" rel="self" type="application/rss+xml" />
@@ -13,8 +13,9 @@
       <pubDate>Mon, 07 Dec 2020 00:00:00 +0000</pubDate>
       
       <guid>/post/2020/12/07/blogpost1/</guid>
-      <description>Link to project 1
-Link to google</description>
+      <description>Throughout Computational Biology I have been primarily strengthening my understanding of using the language R, which can be seen in these two projects linked on my site. Link to project 1
+Link to project 2
+However, more recently I have been learning how to tie in Python as well in order to complement both languages. Something we have recently been learning about is regular expressions, which can be seen below.</description>
     </item>
     
   </channel>

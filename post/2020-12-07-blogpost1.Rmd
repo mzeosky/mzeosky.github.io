@@ -7,6 +7,9 @@ categories: []
 tags: []
 description: ''
 ---
-[Link to project 1](/projects/project1/)
+Throughout Computational Biology I have been primarily strengthening my understanding of using the language R, which can be seen in these two projects linked on my site.
+[Link to project 1](/project/project1/)
 
-[Link to google](https://www.google.com)
+[Link to project 2](/project/project2/)
+
+However, more recently I have been learning how to tie in Python as well in order to complement both languages. Something we have recently been learning about is regular expressions, which can be seen below.
