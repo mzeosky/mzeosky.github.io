@@ -1,8 +1,185 @@
 ---
-title: "Project 1"
-author: "Me"
-date: "2020-12-01"
-output: html_document
+title: "Project1"
+author: "Michael Zeosky"
+date: "10/14/2020"
+output:
+  word_document: default
+  html_document: default
 ---
 
-## Test Project 1
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+  Since quarantine started, I have been bouncing between new and old hobbies and getting invested in them more than normally. Most reently, this passion has been towards soccer. Growing up, it was the main sport I played all the way up until part way through highschool when I stopped having the time to keep up all of my hobbies. Therefore, I decided to look for some datasets in relation to this for inspiration. When looking through fivethirtyeight, I found some really interesting projects about a topic that is always exciting, the World Cup. 
+  
+  In one project's datasets, there were comparisons between every player that played for over 30 minutes for each World Cup over 16 different variables such as "goals" and "touches in the box". These are stored as z-scores against the mean for that year's world cup. This means, the score represents the number of standard deviations above or below the mean performance that year for that specific stat.
+  
+  The other project's dataset was predictions on the outcome of the world cup on a per match basis. This contained variables such as "chance of winning world cup" and "spi" which represents the team's estimated overall strength score. This is derived from the global offensive and global defensive scores, which are calculated as the number of goals that a team would be expected to score against and get scored on by an average team, based on recent international match results. 
+    
+  I was instantly curious about how the predictions would reflect the actual performance of the teams, as well as how each player compared to each other in the different stats. Would the global offensive rank accurately reflect the number of goals the average player on the team scored? Does the spi rating accurately reflect how far the teams will go? I was excited to learn more.
+```{r}
+#IMPORTS
+library(ggplot2)
+library(tidyverse)
+library(dplyr)
+library(pastecs)
+library(readr)
+library(tidyr)
+library(cluster)
+world_cup_comparisons<- read_csv("world_cup_comparisons.csv")
+wc_forecasts <- read_csv("wc_forecasts.csv")
+
+
+```
+In this first step, I imported the packages that are going to be needed throughout the project, as well as imported my two original datasets. It was time to start tidying my data and removing the parts I didn't need.
+
+```{r}
+#TIDYING
+#taking team, gl o gl d, and odds of winning title
+forecasts<-wc_forecasts %>% select(1:2,4:6,21) #%>% mutate(Rounds_progressed=forecast_timestamp)
+forecasts<-forecasts %>% mutate(forecast_timestamp=recode(forecast_timestamp,"2018-06-13 15:00:46 UTC"="0","2018-06-19 16:56:16 UTC"="1","2018-06-24 19:56:15 UTC"="2","2018-06-28 19:57:31 UTC"="3","2018-07-03 20:55:49 UTC"="4","2018-07-07 20:53:40 UTC"="5","2018-07-14 15:56:19 UTC"="6","2018-07-15 16:54:57 UTC"="7"))
+forecasts<- forecasts %>% rename("roundsProgressed"="forecast_timestamp")
+#removing the teams that got knocked out from forecasts
+forecasts = forecasts[!forecasts$win_league == 0.0000,]
+
+#filtering comparisons
+filteringwccomparisons<-world_cup_comparisons %>% filter(season=="2018")
+#filteringwccomparisons %>% glimpse()
+comparisons<-filteringwccomparisons %>% select(player,team,"goals"=goals_z,"expectedGoals"=xg_z,"crosses"=crosses_z,"boxTouches"=boxtouches_z,"passes"=passes_z,"progressivePasses"=progpasses_z,"takeons"=takeons_z,"progressiveRuns"=progruns_z,"tackles"=tackles_z,"interceptions"=interceptions_z,"clearances"=clearances_z,"blocks"=blocks_z,"aerials"=aerials_z,"nonShotExpectedGoals="=nsxg_z)
+```
+  To begin, I removed the variables from the predictions data that I needed and put them into a forecast dataset. This consisted of the team name, spi, global offense score, global defense, score, and chances of winning the cup. I also changed the prediction timestamp variable in order for it to reflect the rounds of the world cup each team progressed. Finally, I removed the teams as they were knocked out of the running.
+  Next I began to clean the player comparisons data. First, I filtered all data from world cups previous to 2018. Then, I selected the statistics I wanted, removing ones related to fouls, as that can be confusing to interpret when looking at a team basis, and renamed the variables to ones that would be easier to interpret.
+
+```{r}
+#DESCRIPTIVE STATISTICS
+
+#descriptive stats of all players
+df.sum <- comparisons %>%
+  select(3:16) %>%
+  summarise_each(funs(min = min,q25 = quantile(., 0.25),median = median,q75 = quantile(.,0.75),max = max,mean = mean,sd = sd))
+
+df.sum %>% pivot_longer(contains("_")) %>% separate(name,into=c("Stat","Type")) %>% pivot_wider(names_from = "Type",values_from="value")
+
+#grouped by team
+df.teams <- comparisons %>%
+  group_by(team) %>% select(3:16) %>%
+  summarise_each(funs(max = max,mean = mean))
+
+df.teams %>% pivot_longer(contains("_")) %>% separate(name,into=c("Stat","Type")) %>% pivot_wider(names_from = "Stat",values_from="value")
+
+
+```
+  I was curious how each stat was distributed between all the players being compared in the 2018 World Cup, as well as how the teams compared in these same statistics. In order to see that, I calculated descriptive statistics first for the entirety of the player's stats. Then, I grouped each of the players by team, and found the average and max of each stat for each team. Essentially, if each team was boiled down to a single player, these scores represent how his stats compare to the average team in the competition. I also wanted to include the max of each stat from each team in order to highlight the individual performances of star players on the teams. One example of this is Argentina, who have Messi, statistically the best player of all time. While the team goal scoring average is only 0.123, barely above average, Messi raises their max to 3.020
+
+
+
+```{r}
+#JOINING DATASETS
+teammean <- comparisons %>%
+  group_by(team) %>% select(3:16) %>%
+  summarise_each(funs(mean = mean))
+
+teammean<- teammean %>% pivot_longer(contains("_")) %>% separate(name,into=c("Stat","Type")) %>% pivot_wider(names_from = "Stat",values_from="value") %>% select(-c("Type"))
+
+meanjoinf<-full_join(forecasts,teammean,by="team") %>% drop_na()
+
+```
+In this step, I first quickly created a dataset that would store these team averages for each stat in a dataset called teammean.
+Next, I joined forecasts and teammean by team with a full join as I wanted to retain all the variables. This resulted in a dataset that contained the teams in each round, their spi, global offense rank, global defense rank, as well as their predicted chances of winning the cup. These teams were also paired with their average stat z scores to show what stats they excelled and did not excell in as a team.Nothing was dropped.
+
+```{r}
+#PLOTS
+#correlation heatmap
+cormat <-  meanjoinf%>% select_if(is.numeric) %>% cor(use="pair")
+tidycor <- cormat %>% as.data.frame() %>% rownames_to_column("var1") %>%
+pivot_longer(-1,names_to="var2",values_to="correlation")
+tidycor
+tidycor%>%ggplot(aes(var1,var2,fill=correlation))+
+geom_tile()+
+scale_fill_gradient2(low="blue",mid="white",high="red")+
+geom_text(aes(label=round(correlation,2)),color = "black", size = 2)+
+theme(axis.text.x = element_text(angle = 90, hjust=1))+
+coord_fixed()+ggtitle("Correlation Heat Map for Player Stats")+labs(x="Stat 1",y="Stat 2")
+
+```
+
+This is the correlation heat map for each stat in the cup. It shows a good visualization of how strong of a relationship each stat has with each other. With this, you can begin to get an idea of what stats tend to interact due to the roles of each position, but more on that later. It is interesting to see how, for example, clearances have a negative correlation with a significant number of the other stats. Maybe they aren't as helpful as they appear?
+
+```{r}
+meanjoinf2<-meanjoinf%>% filter(roundsProgressed==1) %>% mutate(inSpi=spi) %>% select(2,21)
+meanjoinf2<-full_join(meanjoinf,meanjoinf2,by="team")
+ggplot(data=meanjoinf2, aes(x=roundsProgressed,y=win_league, color=inSpi))+geom_point(size=2)+geom_line(aes(group=team))+scale_color_gradient(low="red",high="blue")+ggtitle("Team's Chances of Winning the Cup as a Function of Rounds Progressed")+labs(x="Rounds progressed",y="Chances of Winning the Cup")
+```
+
+This graph is very interesting as it tracks the rounds each team progresses, as well as how each round affects their odds of winning the cup. By having the color set to the initial spi of each team, we can clearly see how strong the team was predicted to be going into the competition.
+```{r}
+meanjoinf2 %>% arrange(desc(global_o)) %>% ggplot(aes(x=global_o,y=reorder(team,-global_o),fill=goals))+geom_bar(stat="summary")+geom_errorbar(stat="summary")+ggtitle("Distribution of Global Offensive Score Between Teams vs Goals Scored")+labs(x="Global Offensive rating",y="Team")+scale_fill_gradient(low="blue",high="red")
+```
+
+In this graph, each team is stacked in order of their summarized global offense, with error bars to reflect change throughout tournament, filled in with a z score distribution of the goals scored in the tournament. While this should have a gradient from blue at the top to red at the bottom, there are definitely some exceptions. Maybe Russia's homecourt advantage had a pretty significant effect!
+```{r}
+comparisons %>% dplyr::select(3:16) %>% scale %>% princomp->indv_pca
+summary(indv_pca, loadings=T)
+```
+
+This is a pca of all of the players, not grouped by team. PC 1 was a positive boost in all stats, representing overall abilities of the player, not specializing yet. PC 2 divided the players between those with higher offensive stats (touches in the box, goals, crosses, etc.) and the players with higher defensive stats (interceptions, clearances, blocks, etc.). Then, PC 3 takes it a step further and divides the offensive stats up between those who are scoring the goals and making the final touch or header, and those who are crossing the ball in or passing for the assist.
+```{r}
+eigvals<-indv_pca$sdev^2
+varprop<-eigvals/sum(eigvals)
+ggplot() + geom_bar(aes(y=varprop, x=1:14), stat="identity") + xlab("") + geom_path(aes(y=varprop, x=1:14))+geom_text(aes(x=1:14, y=varprop, label=round(varprop, 3)), vjust=1, col="white", size=4)+
+scale_y_continuous(breaks=seq(0, .8, .2), labels = scales::percent) +
+scale_x_continuous(breaks=1:14)+ggtitle("Player PCA Eigenvalue Plot")+labs(x="PC",y="Variance")
+
+eigvals
+```
+
+Here we can see that the elbow occurs at PC 4
+```{r}
+indv_pca$loadings[1:14, 2:3] %>% as.data.frame %>% rownames_to_column %>%
+ggplot() + geom_hline(aes(yintercept=0), lty=2) +
+geom_vline(aes(xintercept=0), lty=2) + ylab("PC3") + xlab("PC2") +
+geom_segment(aes(x=0, y=0, xend=Comp.2, yend=Comp.3), arrow=arrow(), col="red") +
+geom_label(aes(x=Comp.2*1.1, y=Comp.3*1.1, label=rowname))+ggtitle("Plot of loadings for Player pca")
+```
+
+When plotting between PC2 and PC3, we can get an idea of the different roles that players play from correlation between these stats in the data, as well as what stats are significant for that role. With stats like goals, boxTouches, and expectedGoals all so tightly grouped, players that tend towards this will likely be strikers trying to get the final touch in for the team. On the other end of the spectrum, we see more defensive stats such as clearances and blocks being tightly grouped. Interestingly, aerials floats between these two groups as jumping for the ball is often happening between a defender and striker trying to score.
+```{r}
+comparisons %>% mutate(PC2=indv_pca$scores[, 2], PC3=indv_pca$scores[, 3]) %>%
+ggplot(aes(PC2, PC3, color=comparisons$goals)) + geom_point() + coord_fixed()+ scale_color_gradient(low="blue",high="red")+ggtitle("Player Distribution Between PC 2 vs PC 3")
+```
+
+From this plot, we see how each player lies on this distribution. This gives us an idea of how these stats are distributed between the players and an idea of the playstyle that they have. The z score of goals scored by each player is overlayed by color, in order to see what stat distributions the players who scored the most goals tended to have. Not only is there an obvious trend left to right on goals scored, there is also a trend from the bottom up as the lower right quadrant had players who crossed the ball more often than they were in the air to score the goal.
+```{r}
+teammean %>% dplyr::select(2:15) %>% scale %>% princomp->mean_pca
+summary(mean_pca, loadings=T)
+```
+
+This is a pca between the means of each team, in order to see how the teams would distribute in their stats comparatively. PC 1 is again a general ability stat, however interestingly this meant a slight negative correlation with aerials and a stronger negative correlation with clearances (again maybe clearances are overhyped). PC2 then divided teams between a more aggressive and defensive or reserve playstyle, seperating those with high numbers of crosses, touches in the box, and takeons, from those with higher rates of passing, blocking, and tackling.
+```{r}
+eigvals<-mean_pca$sdev^2
+varprop<-eigvals/sum(eigvals)
+ggplot() + geom_bar(aes(y=varprop, x=1:14), stat="identity") + xlab("") + geom_path(aes(y=varprop, x=1:14))+geom_text(aes(x=1:14, y=varprop, label=round(varprop, 3)), vjust=1, col="white", size=4)+
+scale_y_continuous(breaks=seq(0, .8, .2), labels = scales::percent) +
+scale_x_continuous(breaks=1:14)+ggtitle("Team Mean PCA Eigenvalue Plot")+labs(x="PC",y="Variance")
+
+eigvals
+```
+
+As we can see from the distribution of variance, PC 1 describes most of the variance, with up to 3 being quite considerable
+```{r}
+mean_pca$loadings[1:14, 1:2] %>% as.data.frame %>% rownames_to_column %>%
+ggplot() + geom_hline(aes(yintercept=0), lty=2) +
+geom_vline(aes(xintercept=0), lty=2) + ylab("PC2") + xlab("PC1") +
+geom_segment(aes(x=0, y=0, xend=Comp.1, yend=Comp.2), arrow=arrow(), col="red") +
+geom_label(aes(x=Comp.1*1.1, y=Comp.2*1.1, label=rowname))+ggtitle("Plot of Loadings for Team Mean PCA")
+```
+
+As we can see, most all stats are moving to the right with PC1, except for clearances and aerials. The stats are then split with more aggressive teams moving lower to the right while more defensive or reseved teams move higher on the y axis.
+```{r}
+teammean %>% mutate(PC1=mean_pca$scores[, 1], PC2=mean_pca$scores[, 2]) %>%
+ggplot(aes(PC1, PC2, color=teammean$team)) + geom_point() + coord_fixed()+ggtitle("Team Mean Stats Distributed Between PC 1 and 2")+labs(color="Team")
+```
+
+This graph shows each team distributed among PC 1 and PC 2, with teams farther to the right having higher scores in key stats. From PC 2, we can get an idea of the agressiveness of each team as well. Interestingly, when looking at the cluster of three teams farthest to the right, they are all quite balanced in respect to PC 2's variance. 
+

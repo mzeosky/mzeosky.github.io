@@ -1,8 +1,307 @@
 ---
-title: "Project 2"
-author: "Me"
-date: "2020-12-01"
+title: "Project2"
+author: "Michael Zeosky"
+date: "11/25/2020"
 output: html_document
 ---
 
-## Test Project 2
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r cars}
+library(ggplot2)
+library(tidyverse)
+library(dplyr)
+library(pastecs)
+library(readr)
+library(tidyr)
+library(cluster)
+library(lmtest)
+library(sandwich)
+world_cup_comparisons<- read_csv("world_cup_comparisons.csv")
+
+library(knitr)
+opts_chunk$set(fig.align="center", fig.height=5, message=FALSE, warning=FALSE, fig.width=8, tidy.opts=list(width.cutoff=60),tidy=TRUE)
+
+```
+
+
+#Making the dataset
+
+```{r}
+comparisonsfiltering<-world_cup_comparisons %>% filter(season=="2018"|season=="2014"|season=="2010") %>% filter(team=="France"|team=="Germany"|team=="Spain") %>% select(player,season,team,"goals"=goals_z,"setups"=xg_z,"crosses"=crosses_z,"boxTouches"=boxtouches_z,"passes"=passes_z,"progressivePasses"=progpasses_z,"takeons"=takeons_z,"progressiveRuns"=progruns_z,"tackles"=tackles_z,"interceptions"=interceptions_z,"clearances"=clearances_z,"blocks"=blocks_z,"aerials"=aerials_z,"expectedGoalsGenerated"=nsxg_z)
+
+#making a new column for placement
+comparisonsfiltering$position<-c(1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,22,22,22,22,22,22,22,22,22,22,22,22,22,22,22,22,22,22,22,22,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,29,29,29,29,29,29,29,29,29,29,29,29,29,29,29,29,29,29,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1)
+comparisonsfiltering$won<-c(1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1)
+comparisonfiltering<-comparisonsfiltering
+comparisonfiltering<-comparisonfiltering %>% mutate_at(c(4:18), funs(c(scale(.))))
+```
+Growing up, soccer my main sport but until recently I have been playing it less and less. Over the quarantine, I got back into playing it as well as following some teams. After analysing different soccer teams for my last project, I thought I would try and continue this analysis and see what other things I could learn.
+In my project's dataset, there were comparisons between every player on the teams of France, Germany, and Spain that played for over 30 minutes for each World Cup over 16 different variables such as "goals" and "touches in the box". These are stored as z-scores against the mean for that year's world cup. This means, the score represents the number of standard deviations above or below the mean performance that year for that specific stat. The stats of each player from these teams was saved over three years, and each year one of the three teams won the World Cup.
+
+
+
+#MANOVA
+assumptions
+```{r}
+#Testing assumptions
+library(rstatix)
+manovaTeam<-comparisonfiltering %>% filter(team=="France")
+manovaTeam<-manovaTeam[-c(4),]
+manovaTeam<-manovaTeam[-c(6),]
+manovaTeam<-manovaTeam[-c(20),]
+manovaTeam<-manovaTeam[-c(47),]
+manovaTeam<-manovaTeam[-c(18),]
+
+group <- manovaTeam$season
+DVs <- manovaTeam %>% select(c(4:17))
+
+#Test multivariate normality for each group (null: assumption met)
+sapply(split(DVs,group), mshapiro_test)
+
+#If any p<.05, stop (assumption violated). If not, test homogeneity of covariance matrices
+
+#Box's M test (null: homogeneity of vcov mats assumption met)
+box_m(DVs, group)
+
+#Optionally View covariance matrices for each group
+lapply(split(DVs,group), cov)
+```
+After testing the assumptions for the MANOVA, it did not pass them which is why my results have to be interpreted with that in mind as the data is not of the quality needed for the test. If they weren't reported as significant, the assumptions would have been met, however each one did report to be significant.
+
+Testing
+```{r}
+man1<-manova(cbind(goals,boxTouches,setups,crosses,passes,progressivePasses,takeons,progressiveRuns,tackles,interceptions,clearances,blocks,aerials,expectedGoalsGenerated)~season, data=manovaTeam)
+summary(man1)
+#is there a mean difference between teams
+man3<-manova(cbind(goals,boxTouches,setups,crosses,passes,progressivePasses,takeons,progressiveRuns,tackles,interceptions,clearances,blocks,aerials,expectedGoalsGenerated)~team, data=comparisonsfiltering)
+summary(man3)
+summary.aov(man3) 
+pairwise.t.test(comparisonsfiltering$passes,
+comparisonsfiltering$team, p.adj="none")
+pairwise.t.test(comparisonsfiltering$progressiveRuns,
+comparisonsfiltering$team, p.adj="none")
+pairwise.t.test(comparisonsfiltering$tackles,
+comparisonsfiltering$team, p.adj="none")
+pairwise.t.test(comparisonsfiltering$interceptions,
+comparisonsfiltering$team, p.adj="none")
+```
+With my MANOVA, I wanted to test whether the three teams that won one of the last three world cups changed in skill between each four years, as each had very different results each year. I was curious if the quality in team would reflect this variety of performances. As could be seen by my first Manova, there was not a significant difference. I then wondered and tested if there was a significant difference between teams, and there was. After performing univariate anovas and post hoc t tests, I could see more about the data. Passes, progressive runs, tackles, and interceptions were all found to be significant. After conducting my t tests, there were a total of 26 tests done. After adjusting my alpha to take this into account, no factors were significant except Spain in passing (which they are known for!).
+
+number of tests: 26 total as 1 manova, 14 anovas and 12 t tests
+a=0.05/26=0.0019
+
+
+#RANDOMIZATION TEST
+
+```{r}
+#win<-comparisonfiltering %>% filter(won==1) %>% select(goals)
+#lose<-comparisonfiltering %>% filter(won==0) %>% select(goals)
+#rando<-data.frame(condition=c(rep("lose"),rep("win")),time=c(lose,win))
+#head(rando)
+#ggplot(comparisonsfiltering,aes(goals,fill=boxTouches))+geom_histogram(bins=)+
+#  facet_wrap(~boxTouches,ncol=2)+theme(legend.position="none")
+#rand_dist<-vector()
+#for(i in 1:5000){
+#new<-data.frame(goals=sample(comparisonsfiltering$goals),condition=comparisonsfiltering$boxTouches)
+#rand_dist[i]<-mean(new[new$boxTouches=="Good",]$goals)
+#-mean(new[new$condition=="Bad",]$goals)}
+#{hist(rand_dist,main="",ylab="");}
+#mean(rand_dist>18.258 | rand_dist < -18.258)
+
+
+obs_F<-2.56 #this is our observed F-statistic
+Fs<-replicate(5000,{ #do everything in curly braces 5000 times and save the output
+new<-comparisonfiltering%>%mutate(goals=sample(goals)) #randomly permute response variable (len)
+#compute the F-statistic by hand
+SSW<- new%>%group_by(won)%>%summarize(SSW=sum((goals-mean(goals))^2))%>%
+summarize(sum(SSW))%>%pull
+SSB<- new%>%mutate(mean=mean(goals))%>%group_by(won)%>%mutate(groupmean=mean(goals))%>%
+summarize(SSB=sum((mean-groupmean)^2))%>%summarize(sum(SSB))%>%pull
+(SSB/2)/(SSW/28) #compute F statistic (num df = K-1 = 3-1, denom df = N-K = 60-3)
+})
+hist(Fs, prob=T); abline(v = obs_F, col="red",add=T)
+mean(Fs>obs_F)
+```
+Since there is a 0 p value for our generated f statistic, the measured f statistic is higher than the 5000 generated ones which means that the number of goals scored definitely differs between those who won and those who didn't.
+#LINEAR REGRESSION MODEL
+
+```{r}
+
+center_scale <- function(x) {
+    scale(x, scale = FALSE)
+}
+centercomp<-data.frame(comparisonfiltering %>% select(goals,passes,position) %>% scale())
+#centercomp$position<-comparisonsfiltering$position
+fit<-lm(position ~ goals * passes, data=centercomp)
+summary(fit)
+fit2<-lm(position ~ goals * passes, data=comparisonfiltering)
+summary(fit2)
+
+#centercomp %>% select(position) %>% mutate(if position==1)
+perf=cut(centercomp$position,3)
+table(perf)
+ # if(position1){position=3
+ # }else if (position>20){position=2
+ # }else{position=1}
+ggplot(centercomp, aes(passes,goals, colour=perf)) + geom_smooth(method = "lm", se = F, fullrange = T)+
+geom_point()+geom_vline(xintercept=0)
+
+#modx.values
+
+resids<-fit$residuals; fitvals<-fit$fitted.values
+ggplot()+geom_point(aes(fitvals,resids))+geom_hline(yintercept=0, col="red")
+#bptest(fit)
+ggplot()+geom_histogram(aes(resids),bins=20)
+ggplot()+geom_qq(aes(sample=resids))+geom_qq()
+ks.test(resids, "pnorm", sd=sd(resids))
+
+coeftest(fit)[,1:2] 
+coeftest(fit, vcov=vcovHC(fit))[,1:2]
+#samp_distn<-replicate(5000, {
+#boot_dat<-boot_dat<-comparisonsfiltering[sample(nrow(comparisonfiltering),replace=TRUE),]
+#fit<-lm(won ~ goals * passing, data=boot_dat)
+#coef(fit)
+#})
+
+```
+In the linear regression model, I was curious whether offensive stats such as a player's ability to get goals and complete passes would be a significant predictor on the position that their team came in that year. While only looking at the intercepts, it can be seen that both abilities in both goals and passes would bring the team closer to number 1. Interestingly, the interaction between goals and passes was apparently not as conducive to winning the tournament during those three years. As can be seen by the tests of linearity, normality, and homoskedasticity, the data did not meet these assumptions so results must be interpreted with this in mind. 
+There were no significant differences before or after using robust SEs, as the change between is minimal.
+
+#LOGISTIC REGRESSION MODEL
+
+Accuracy
+(2+53)/168
+Sensitivity
+2/2
+Specificity
+53/166
+Precision
+2/115
+AUC
+
+```{r}
+comparisonfiltering$won <- factor(comparisonfiltering$won) #make rank a factor
+
+fit3<-glm(won~goals+passes+crosses, data=comparisonfiltering, family="binomial")
+coeftest(fit3)
+
+
+#original scale (log-odds scale)
+coef(fit3)%>%round(3)%>%data.frame
+
+#exponentiated (odds scale)
+exp(coef(fit3))%>%round(3)%>%data.frame
+
+
+prob<-predict(fit3,type="response") #get predictions for every student in the dataset
+#pred<-ifelse(prob>.5,1,0)
+table(predict=as.numeric(prob>.5),truth=comparisonfiltering$won)%>%addmargins
+#table(truth=comparisonfiltering$won, prediction=pred)%>%addmargins
+(251+27)/400 #accuracy
+27/127 #tpr
+251/273 #tnr
+comparisonfiltering$logit<-predict(fit3,type="link")
+
+comparisonfiltering%>%ggplot()+geom_density(aes(logit,color=won,fill=won), alpha=.4)+
+  theme(legend.position=c(.85,.85))+geom_vline(xintercept=0)+xlab("logit (log-odds)")+
+  geom_rug(aes(logit,color=won))
+
+#table(predict=as.numeric(comparisonsfiltering$prob>.1),truth=comparisonsfiltering$won)
+
+library(plotROC) #install.packages(plotROC)
+
+#geom_roc needs true outcome (d, should be 0/1) and predicted probability/logit (m, or just  predictor if just one):
+ROCplot<-ggplot(comparisonsfiltering)+geom_roc(aes(d=won,m=prob), n.cuts=0) 
+
+ROCplot
+
+#as soon as you build your ROC curve, you can compute the AUC with
+calc_auc(ROCplot)
+```
+With only the intercept coefficient being significant, the goals, passes, and crosses per individual did not have a significant effect on whether the team would win the world cup that year, at least in comparison to two of the other best teams in the world. Goals and passes, if significant, would have brought the team closer to winning whereas crosses had a much lower estimate on winning showing what factored more into getting the gold. With a final AUC of 0.571, our model was not very good at predicting whether or not the team would win from these three factors.
+
+
+```{r}
+#LEAVE THIS CHUNK ALONE!
+library(knitr)
+opts_chunk$set(fig.align="center", fig.height=5, message=FALSE, warning=FALSE, fig.width=8, tidy.opts=list(width.cutoff=60),tidy=TRUE)
+
+#HERE'S THE CLASSIFICAITON DIAGNOSTICS FUNCTION
+class_diag<-function(probs,truth){
+  tab<-table(factor(probs>.5,levels=c("FALSE","TRUE")),truth)
+  acc=sum(diag(tab))/sum(tab)
+  sens=tab[2,2]/colSums(tab)[2]
+  spec=tab[1,1]/colSums(tab)[1]
+  ppv=tab[2,2]/rowSums(tab)[2]
+  f1=2*(sens*ppv)/(sens+ppv)
+
+  if(is.numeric(truth)==FALSE & is.logical(truth)==FALSE){
+    truth<-as.numeric(truth)-1}
+  
+  #CALCULATE EXACT AUC
+  ord<-order(probs, decreasing=TRUE)
+  probs <- probs[ord]; truth <- truth[ord]
+  
+  TPR=cumsum(truth)/max(1,sum(truth)) 
+  FPR=cumsum(!truth)/max(1,sum(!truth))
+  
+  dup<-c(probs[-1]>=probs[-length(probs)], FALSE)
+  TPR<-c(0,TPR[!dup],1); FPR<-c(0,FPR[!dup],1)
+  
+  n <- length(TPR)
+  auc<- sum( ((TPR[-1]+TPR[-n])/2) * (FPR[-1]-FPR[-n]) )
+
+  data.frame(acc,sens,spec,ppv,f1,auc)
+}
+
+fit5<-glm(won~.,data=comparisonfiltering,family="binomial",control = list(maxit = 50))
+prob<-predict(fit5,type="response")
+class_diag(prob,comparisonfiltering$won)
+table(predict=as.numeric(prob>.5),truth=comparisonsfiltering$won)%>%addmargins
+
+k=10
+data <- comparisonfiltering %>% sample_frac #put rows of dataset in random order
+folds <- ntile(1:nrow(data),n=10) #create fold labels
+diags<-NULL
+#for(i in 1:k){
+#train <- data[folds!=i,] #create training set (all but fold i)
+#test <- data[folds==i,] #create test set (just fold i)
+#truth <- test$won #save truth labels from fold i
+#fit<-glm(won~.,data=comparisonfiltering,family="binomial",control = list(maxit = 50))
+#prob<-predict(fit,newdata = test,type="response")
+#diags<-rbind(diags,class_diag(prob,truth))
+#}
+#summarize_all(diags,mean)
+
+
+library(glmnet)
+y <- as.matrix(comparisonfiltering$won)
+comp_preds <- model.matrix(won~ -1+., data=comparisonfiltering)
+head(comp_preds); x<-scale(comp_preds) 
+
+cv<-cv.glmnet(comp_preds,y,family="binomial")
+lasso_fit<-glmnet(comp_preds,y,family="binomial",lambda=cv$lambda.1se)
+coef(lasso_fit)
+
+k=10
+comp<-comparisonfiltering %>% mutate(Andre=ifelse(comparisonfiltering$player=="André Schürrle",1,0),
+Arne=ifelse(comparisonfiltering$player=="Arne Friedrich",1,0),Benedikt=ifelse(comparisonfiltering$player=="Benedikt Höwedes",1,0),Cacau=ifelse(comparisonfiltering$player=="Cacau",1,0),Christoph=ifelse(comparisonfiltering$player=="Christoph Kramer",1,0),Dennis=ifelse(comparisonfiltering$player=="Dennis Aogo",1,0),Fernando=ifelse(comparisonfiltering$player=="Fernando Llorente",1,0),Jorg=ifelse(comparisonfiltering$player=="Jörg Butt",1,0),Holger=ifelse(comparisonfiltering$player=="Holger Badstuber",1,0),Jesus=ifelse(comparisonfiltering$player=="Jesús Navas",1,0),Marcell=ifelse(comparisonfiltering$player=="Marcell Jansen",1,0),Mario=ifelse(comparisonfiltering$player=="Mario Gómez",1,0),Gotze=ifelse(comparisonfiltering$player=="Mario Götze",1,0),Marko=ifelse(comparisonfiltering$player=="Marko Marin",1,0),Hummels=ifelse(comparisonfiltering$player=="Mats Hummels",1,0),Piotr=ifelse(comparisonfiltering$player=="Piotr Trochowski",1,0),Shkodran=ifelse(comparisonfiltering$player=="Shkodran Mustafi",1,0),German=ifelse(comparisonfiltering$team=="Germany",1,0),Span=ifelse(comparisonfiltering$team=="Spain",1,0))
+data<-comp[sample(nrow(comp)),]
+folds<-cut(seq(1:nrow(comp)),breaks=k,labels=F)
+diags<-NULL
+for(i in 1:k){
+train<-data[folds!=i,]
+test<-data[folds==i,]
+truth<-test$won
+fit<-glm(won~Andre+Arne+Benedikt+Cacau+Christoph+Dennis+Fernando+Jorg+Holger+Jesus+Marcell+Mario+Gotze+Marko+Hummels+Piotr+Shkodran+German+Span+season+tackles,data=comp,family="binomial")
+probs<-predict(fit,newdata = test,type="response")
+diags<-rbind(diags,class_diag(probs,truth))
+}
+summarize_all(diags,mean)
+```
+Using all of the variables, the fit was perfect and guessed correctly who won 100% of the time.
+Once I used lasso to find the factors that were most significant as predictors, the model had an auc of 0.673 which was a step up from the AUC calculated in the beginning. The factors that were determined to be significant were a few different players, which team they were, as well as the season they were playing and how good the players were at tackling. 

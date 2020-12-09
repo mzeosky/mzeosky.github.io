@@ -7,7 +7,7 @@
     <meta name="author" content="Chris Turner" />
     
     <link rel="shortcut icon" type="image/x-icon" href="../../img/favicon.ico">
-    <title>Project 2</title>
+    <title>Project2</title>
     <meta name="generator" content="Hugo 0.79.0" />
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <link rel="stylesheet" type="text/css" href="../../css/main.css" />
@@ -54,13 +54,13 @@
       <div class="container">
         <div class="blog-post">
           <h3>
-            <strong><a href="../../project/project2/">Project 2</a></strong>
+            <strong><a href="../../project/project2/">Project2</a></strong>
           </h3>
         </div>
  
 <div class="blog-title">
           <h4>
-         December 1, 2020 
+         January 1, 0001 
             &nbsp;&nbsp;
             
           </h4>
@@ -72,8 +72,1197 @@
               
 
 
-<div id="test-project-2" class="section level2">
-<h2>Test Project 2</h2>
+<pre class="r"><code>library(ggplot2)
+library(tidyverse)</code></pre>
+<pre><code>## ── Attaching packages ────────────────────────────────────────────────────────────────────────────────────────── tidyverse 1.3.0 ──</code></pre>
+<pre><code>## ✓ tibble  3.0.3     ✓ dplyr   1.0.1
+## ✓ tidyr   1.1.1     ✓ stringr 1.4.0
+## ✓ readr   1.3.1     ✓ forcats 0.5.0
+## ✓ purrr   0.3.4</code></pre>
+<pre><code>## ── Conflicts ───────────────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
+## x dplyr::filter() masks stats::filter()
+## x dplyr::lag()    masks stats::lag()</code></pre>
+<pre class="r"><code>library(dplyr)
+library(pastecs)</code></pre>
+<pre><code>## 
+## Attaching package: &#39;pastecs&#39;</code></pre>
+<pre><code>## The following objects are masked from &#39;package:dplyr&#39;:
+## 
+##     first, last</code></pre>
+<pre><code>## The following object is masked from &#39;package:tidyr&#39;:
+## 
+##     extract</code></pre>
+<pre class="r"><code>library(readr)
+library(tidyr)
+library(cluster)
+library(lmtest)</code></pre>
+<pre><code>## Loading required package: zoo</code></pre>
+<pre><code>## 
+## Attaching package: &#39;zoo&#39;</code></pre>
+<pre><code>## The following objects are masked from &#39;package:base&#39;:
+## 
+##     as.Date, as.Date.numeric</code></pre>
+<pre class="r"><code>library(sandwich)
+world_cup_comparisons&lt;- read_csv(&quot;world_cup_comparisons.csv&quot;)</code></pre>
+<pre><code>## Parsed with column specification:
+## cols(
+##   player = col_character(),
+##   season = col_double(),
+##   team = col_character(),
+##   goals_z = col_double(),
+##   xg_z = col_double(),
+##   crosses_z = col_double(),
+##   boxtouches_z = col_double(),
+##   passes_z = col_double(),
+##   progpasses_z = col_double(),
+##   takeons_z = col_double(),
+##   progruns_z = col_double(),
+##   tackles_z = col_double(),
+##   interceptions_z = col_double(),
+##   clearances_z = col_double(),
+##   blocks_z = col_double(),
+##   aerials_z = col_double(),
+##   fouls_z = col_double(),
+##   fouled_z = col_double(),
+##   nsxg_z = col_double()
+## )</code></pre>
+<pre class="r"><code>library(knitr)
+opts_chunk$set(fig.align=&quot;center&quot;, fig.height=5, message=FALSE, warning=FALSE, fig.width=8, tidy.opts=list(width.cutoff=60),tidy=TRUE)</code></pre>
+<div id="making-the-dataset" class="section level1">
+<h1>Making the dataset</h1>
+<pre class="r"><code>comparisonsfiltering &lt;- world_cup_comparisons %&gt;% filter(season == 
+    &quot;2018&quot; | season == &quot;2014&quot; | season == &quot;2010&quot;) %&gt;% filter(team == 
+    &quot;France&quot; | team == &quot;Germany&quot; | team == &quot;Spain&quot;) %&gt;% select(player, 
+    season, team, goals = goals_z, setups = xg_z, crosses = crosses_z, 
+    boxTouches = boxtouches_z, passes = passes_z, progressivePasses = progpasses_z, 
+    takeons = takeons_z, progressiveRuns = progruns_z, tackles = tackles_z, 
+    interceptions = interceptions_z, clearances = clearances_z, 
+    blocks = blocks_z, aerials = aerials_z, expectedGoalsGenerated = nsxg_z)
+
+# making a new column for placement
+comparisonsfiltering$position &lt;- c(1, 1, 1, 1, 1, 1, 1, 1, 1, 
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 22, 22, 22, 22, 22, 22, 
+    22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 10, 
+    10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 
+    10, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 23, 23, 
+    23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 
+    23, 23, 23, 23, 23, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 
+    29, 29, 29, 29, 29, 29, 29, 29, 3, 3, 3, 3, 3, 3, 3, 3, 3, 
+    3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 1, 1, 1, 1, 1, 1, 1, 1, 
+    1, 1, 1, 1, 1, 1, 1, 1)
+comparisonsfiltering$won &lt;- c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+    0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 
+    1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+    0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 
+    1, 1, 1, 1, 1)
+comparisonfiltering &lt;- comparisonsfiltering
+comparisonfiltering &lt;- comparisonfiltering %&gt;% mutate_at(c(4:18), 
+    funs(c(scale(.))))</code></pre>
+<p>Growing up, soccer my main sport but until recently I have been playing it less and less. Over the quarantine, I got back into playing it as well as following some teams. After analysing different soccer teams for my last project, I thought I would try and continue this analysis and see what other things I could learn. In my project's dataset, there were comparisons between every player on the teams of France, Germany, and Spain that played for over 30 minutes for each World Cup over 16 different variables such as &quot;goals&quot; and &quot;touches in the box&quot;. These are stored as z-scores against the mean for that year's world cup. This means, the score represents the number of standard deviations above or below the mean performance that year for that specific stat. The stats of each player from these teams was saved over three years, and each year one of the three teams won the World Cup.</p>
+</div>
+<div id="manova" class="section level1">
+<h1>MANOVA</h1>
+<p>assumptions</p>
+<pre class="r"><code># Testing assumptions
+library(rstatix)
+manovaTeam &lt;- comparisonfiltering %&gt;% filter(team == &quot;France&quot;)
+manovaTeam &lt;- manovaTeam[-c(4), ]
+manovaTeam &lt;- manovaTeam[-c(6), ]
+manovaTeam &lt;- manovaTeam[-c(20), ]
+manovaTeam &lt;- manovaTeam[-c(47), ]
+manovaTeam &lt;- manovaTeam[-c(18), ]
+
+group &lt;- manovaTeam$season
+DVs &lt;- manovaTeam %&gt;% select(c(4:17))
+
+# Test multivariate normality for each group (null:
+# assumption met)
+sapply(split(DVs, group), mshapiro_test)</code></pre>
+<pre><code>##           2010        2014         2018        
+## statistic 0.2622232   0.301994     0.2735242   
+## p.value   2.16691e-08 4.021168e-08 2.577245e-08</code></pre>
+<pre class="r"><code># If any p&lt;.05, stop (assumption violated). If not, test
+# homogeneity of covariance matrices
+
+# Box&#39;s M test (null: homogeneity of vcov mats assumption
+# met)
+box_m(DVs, group)</code></pre>
+<pre><code>## # A tibble: 1 x 4
+##   statistic     p.value parameter method                                        
+##       &lt;dbl&gt;       &lt;dbl&gt;     &lt;dbl&gt; &lt;chr&gt;                                         
+## 1      332. 0.000000148       210 Box&#39;s M-test for Homogeneity of Covariance Ma…</code></pre>
+<pre class="r"><code># Optionally View covariance matrices for each group
+lapply(split(DVs, group), cov)</code></pre>
+<pre><code>## $`2010`
+##                              goals        setups     crosses  boxTouches
+## goals                   0.27111538  0.1033851402  0.02858075  0.07558633
+## setups                  0.10338514  0.1647410538  0.09530254  0.17144294
+## crosses                 0.02858075  0.0953025445  0.68621104  0.25446568
+## boxTouches              0.07558633  0.1714429377  0.25446568  0.35903267
+## passes                  0.02116847 -0.0903980046  0.24709364 -0.03275980
+## progressivePasses      -0.03598929 -0.1904324811  0.25129578 -0.10380184
+## takeons                 0.27836730  0.1471167805  0.79000654  0.38002413
+## progressiveRuns        -0.02826045 -0.0231805296  0.39869955  0.12161629
+## tackles                -0.05245579 -0.0265076239  0.32259211  0.09477677
+## interceptions          -0.13438341 -0.1862347072  0.43510198 -0.01650590
+## clearances             -0.08465029 -0.2686139410  0.10590639 -0.25485854
+## blocks                  0.06392480  0.0436926907 -0.04544997 -0.01407387
+## aerials                 0.12776211 -0.0005308116  0.32264933  0.02836770
+## expectedGoalsGenerated  0.10590918  0.1197170851  0.73225854  0.31956882
+##                              passes progressivePasses     takeons
+## goals                   0.021168467       -0.03598929  0.27836730
+## setups                 -0.090398005       -0.19043248  0.14711678
+## crosses                 0.247093636        0.25129578  0.79000654
+## boxTouches             -0.032759804       -0.10380184  0.38002413
+## passes                  0.332436326        0.44117072  0.44972964
+## progressivePasses       0.441170722        1.00600406  0.19860115
+## takeons                 0.449729642        0.19860115  2.32764784
+## progressiveRuns         0.327142738        0.41032261  0.94316729
+## tackles                 0.273386177        0.18859331  0.70660023
+## interceptions           0.534269985        0.60198772  0.56858469
+## clearances              0.433107558        0.64304600 -0.34349640
+## blocks                  0.009545971       -0.06339386 -0.03593444
+## aerials                 0.319070768        0.35528394  0.12270253
+## expectedGoalsGenerated  0.279035067        0.35882962  1.00547124
+##                        progressiveRuns     tackles interceptions  clearances
+## goals                      -0.02826045 -0.05245579   -0.13438341 -0.08465029
+## setups                     -0.02318053 -0.02650762   -0.18623471 -0.26861394
+## crosses                     0.39869955  0.32259211    0.43510198  0.10590639
+## boxTouches                  0.12161629  0.09477677   -0.01650590 -0.25485854
+## passes                      0.32714274  0.27338618    0.53426998  0.43310756
+## progressivePasses           0.41032261  0.18859331    0.60198772  0.64304600
+## takeons                     0.94316729  0.70660023    0.56858469 -0.34349640
+## progressiveRuns             0.78340003  0.45269864    0.51762642  0.07826310
+## tackles                     0.45269864  0.80123100    0.60404466  0.07582654
+## interceptions               0.51762642  0.60404466    1.42212210  0.75323039
+## clearances                  0.07826310  0.07582654    0.75323039  1.46377774
+## blocks                     -0.08228799 -0.10184292   -0.03637231  0.19715548
+## aerials                     0.01149254  0.04405104    0.66540404  0.77090258
+## expectedGoalsGenerated      0.55794402  0.31705229    0.35071064  0.01271468
+##                              blocks       aerials expectedGoalsGenerated
+## goals                   0.063924799  0.1277621060             0.10590918
+## setups                  0.043692691 -0.0005308116             0.11971709
+## crosses                -0.045449974  0.3226493333             0.73225854
+## boxTouches             -0.014073872  0.0283676994             0.31956882
+## passes                  0.009545971  0.3190707676             0.27903507
+## progressivePasses      -0.063393858  0.3552839444             0.35882962
+## takeons                -0.035934438  0.1227025277             1.00547124
+## progressiveRuns        -0.082287992  0.0114925362             0.55794402
+## tackles                -0.101842921  0.0440510395             0.31705229
+## interceptions          -0.036372310  0.6654040401             0.35071064
+## clearances              0.197155483  0.7709025753             0.01271468
+## blocks                  0.238412158  0.1495986313            -0.08460996
+## aerials                 0.149598631  0.9415475135             0.23284071
+## expectedGoalsGenerated -0.084609964  0.2328407146             0.91588541
+## 
+## $`2014`
+##                              goals      setups     crosses  boxTouches
+## goals                   0.95178716  1.52590439  0.06823040  1.22399630
+## setups                  1.52590439  3.01120168  0.19059447  2.09378316
+## crosses                 0.06823040  0.19059447  2.09693589  0.48479588
+## boxTouches              1.22399630  2.09378316  0.48479588  1.93488222
+## passes                  0.03655281  0.09163840  0.18104094  0.07640680
+## progressivePasses      -0.12518488 -0.08318614  0.25078504 -0.15024061
+## takeons                 0.45370424  0.62116436  0.02818249  0.58982123
+## progressiveRuns         0.25272223  0.44418056  0.07562481  0.33029428
+## tackles                -0.17738342 -0.19021618 -0.06393558 -0.09644090
+## interceptions          -0.11866033 -0.05958720 -0.06128584 -0.11123767
+## clearances             -0.28357131 -0.39318576 -0.26651041 -0.35861123
+## blocks                 -0.34884442 -0.58223163 -0.61500333 -0.53671174
+## aerials                -0.14372542 -0.23983054 -0.05893273 -0.09245417
+## expectedGoalsGenerated  0.86746629  1.65018549  1.09828271  1.38727432
+##                            passes progressivePasses     takeons progressiveRuns
+## goals                  0.03655281       -0.12518488  0.45370424     0.252722232
+## setups                 0.09163840       -0.08318614  0.62116436     0.444180561
+## crosses                0.18104094        0.25078504  0.02818249     0.075624814
+## boxTouches             0.07640680       -0.15024061  0.58982123     0.330294276
+## passes                 0.34728350        0.28201152  0.33349302     0.116118989
+## progressivePasses      0.28201152        0.54538756 -0.01781980     0.101664996
+## takeons                0.33349302       -0.01781980  1.17083804     0.186209347
+## progressiveRuns        0.11611899        0.10166500  0.18620935     0.205381803
+## tackles                0.26597917        0.17494407  0.18753857    -0.001744666
+## interceptions          0.15930501        0.09422095  0.01443669    -0.015592098
+## clearances             0.14546431        0.21829302 -0.15393069     0.044793558
+## blocks                 0.14644809        0.16556952 -0.45637124     0.037540395
+## aerials                0.18978041        0.21809636  0.05651571     0.120767098
+## expectedGoalsGenerated 0.11494846        0.03264427  0.31586989     0.270419448
+##                             tackles interceptions  clearances     blocks
+## goals                  -0.177383424   -0.11866033 -0.28357131 -0.3488444
+## setups                 -0.190216180   -0.05958720 -0.39318576 -0.5822316
+## crosses                -0.063935577   -0.06128584 -0.26651041 -0.6150033
+## boxTouches             -0.096440899   -0.11123767 -0.35861123 -0.5367117
+## passes                  0.265979175    0.15930501  0.14546431  0.1464481
+## progressivePasses       0.174944068    0.09422095  0.21829302  0.1655695
+## takeons                 0.187538572    0.01443669 -0.15393069 -0.4563712
+## progressiveRuns        -0.001744666   -0.01559210  0.04479356  0.0375404
+## tackles                 0.731128588    0.30620125  0.23883243  0.1766062
+## interceptions           0.306201249    0.23040474  0.17313382  0.2476446
+## clearances              0.238832431    0.17313382  0.62274153  0.6423102
+## blocks                  0.176606196    0.24764463  0.64231022  1.2147966
+## aerials                 0.057493226    0.12217100  0.59315416  0.4958584
+## expectedGoalsGenerated -0.188637119   -0.10916481 -0.36160161 -0.5856583
+##                            aerials expectedGoalsGenerated
+## goals                  -0.14372542             0.86746629
+## setups                 -0.23983054             1.65018549
+## crosses                -0.05893273             1.09828271
+## boxTouches             -0.09245417             1.38727432
+## passes                  0.18978041             0.11494846
+## progressivePasses       0.21809636             0.03264427
+## takeons                 0.05651571             0.31586989
+## progressiveRuns         0.12076710             0.27041945
+## tackles                 0.05749323            -0.18863712
+## interceptions           0.12217100            -0.10916481
+## clearances              0.59315416            -0.36160161
+## blocks                  0.49585842            -0.58565830
+## aerials                 1.07904814            -0.14794433
+## expectedGoalsGenerated -0.14794433             1.43154594
+## 
+## $`2018`
+##                              goals      setups     crosses  boxTouches
+## goals                   1.43551339  1.03461132  0.42283786  0.63019746
+## setups                  1.03461132  1.10441445  0.36904703  0.66605970
+## crosses                 0.42283786  0.36904703  0.26974874  0.15592567
+## boxTouches              0.63019746  0.66605970  0.15592567  0.71949743
+## passes                  0.16738187  0.05898710  0.04147393  0.03394322
+## progressivePasses       0.10104195 -0.06051505  0.04103043 -0.02817378
+## takeons                 1.10224473  0.62603842  0.28019507  0.66183868
+## progressiveRuns         0.31220474  0.13737183  0.09310685  0.16045522
+## tackles                 0.24087208  0.21878264  0.14900652  0.06992305
+## interceptions          -0.15803378 -0.13423960 -0.07315883 -0.13368813
+## clearances             -0.02473867 -0.28836228 -0.08326617 -0.04245499
+## blocks                 -0.01635635 -0.09886721 -0.04231232 -0.05097907
+## aerials                -0.03205798  0.08985049 -0.12630042  0.34478364
+## expectedGoalsGenerated  0.54622840  0.46091575  0.15943965  0.42614620
+##                            passes progressivePasses     takeons progressiveRuns
+## goals                  0.16738187        0.10104195  1.10224473     0.312204736
+## setups                 0.05898710       -0.06051505  0.62603842     0.137371830
+## crosses                0.04147393        0.04103043  0.28019507     0.093106854
+## boxTouches             0.03394322       -0.02817378  0.66183868     0.160455219
+## passes                 0.32236424        0.29208597  0.10139921     0.121091403
+## progressivePasses      0.29208597        0.34889096  0.02411256     0.108906979
+## takeons                0.10139921        0.02411256  1.47051832     0.412333887
+## progressiveRuns        0.12109140        0.10890698  0.41233389     0.207298473
+## tackles                0.20591002        0.17170085  0.16516008     0.117479785
+## interceptions          0.29300515        0.16445397 -0.04251819     0.065611982
+## clearances             0.60572620        0.73439405 -0.28189736     0.155913370
+## blocks                 0.12493773        0.14647021 -0.04996268     0.015789864
+## aerials                0.26380109        0.24831112 -0.09806886    -0.004318498
+## expectedGoalsGenerated 0.06133022        0.01480619  0.60214609     0.153176003
+##                           tackles interceptions  clearances      blocks
+## goals                  0.24087208   -0.15803378 -0.02473867 -0.01635635
+## setups                 0.21878264   -0.13423960 -0.28836228 -0.09886721
+## crosses                0.14900652   -0.07315883 -0.08326617 -0.04231232
+## boxTouches             0.06992305   -0.13368813 -0.04245499 -0.05097907
+## passes                 0.20591002    0.29300515  0.60572620  0.12493773
+## progressivePasses      0.17170085    0.16445397  0.73439405  0.14647021
+## takeons                0.16516008   -0.04251819 -0.28189736 -0.04996268
+## progressiveRuns        0.11747978    0.06561198  0.15591337  0.01578986
+## tackles                0.33385625    0.21202032  0.10189873  0.01492604
+## interceptions          0.21202032    0.68033367  0.22384443  0.03954849
+## clearances             0.10189873    0.22384443  2.29353732  0.43775670
+## blocks                 0.01492604    0.03954849  0.43775670  0.14043791
+## aerials                0.01281164   -0.02066049  0.95737646  0.23944925
+## expectedGoalsGenerated 0.13274885   -0.06824142 -0.17081129 -0.03164266
+##                             aerials expectedGoalsGenerated
+## goals                  -0.032057984             0.54622840
+## setups                  0.089850492             0.46091575
+## crosses                -0.126300423             0.15943965
+## boxTouches              0.344783645             0.42614620
+## passes                  0.263801090             0.06133022
+## progressivePasses       0.248311116             0.01480619
+## takeons                -0.098068860             0.60214609
+## progressiveRuns        -0.004318498             0.15317600
+## tackles                 0.012811641             0.13274885
+## interceptions          -0.020660489            -0.06824142
+## clearances              0.957376456            -0.17081129
+## blocks                  0.239449246            -0.03164266
+## aerials                 1.070315498             0.11367389
+## expectedGoalsGenerated  0.113673890             0.36064154</code></pre>
+<p>After testing the assumptions for the MANOVA, it did not pass them which is why my results have to be interpreted with that in mind as the data is not of the quality needed for the test. If they weren't reported as significant, the assumptions would have been met, however each one did report to be significant.</p>
+<p>Testing</p>
+<pre class="r"><code>man1 &lt;- manova(cbind(goals, boxTouches, setups, crosses, passes, 
+    progressivePasses, takeons, progressiveRuns, tackles, interceptions, 
+    clearances, blocks, aerials, expectedGoalsGenerated) ~ season, 
+    data = manovaTeam)
+summary(man1)</code></pre>
+<pre><code>##           Df  Pillai approx F num Df den Df Pr(&gt;F)
+## season     1 0.25028  0.85842     14     36 0.6062
+## Residuals 49</code></pre>
+<pre class="r"><code># is there a mean difference between teams
+man3 &lt;- manova(cbind(goals, boxTouches, setups, crosses, passes, 
+    progressivePasses, takeons, progressiveRuns, tackles, interceptions, 
+    clearances, blocks, aerials, expectedGoalsGenerated) ~ team, 
+    data = comparisonsfiltering)
+summary(man3)</code></pre>
+<pre><code>##            Df  Pillai approx F num Df den Df    Pr(&gt;F)    
+## team        2 0.37969   2.5609     28    306 4.698e-05 ***
+## Residuals 165                                             
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code>summary.aov(man3)</code></pre>
+<pre><code>##  Response goals :
+##              Df  Sum Sq Mean Sq F value Pr(&gt;F)
+## team          2   1.184 0.59202  0.5083 0.6024
+## Residuals   165 192.163 1.16462               
+## 
+##  Response boxTouches :
+##              Df  Sum Sq Mean Sq F value Pr(&gt;F)
+## team          2   2.676  1.3379  0.8799 0.4167
+## Residuals   165 250.872  1.5204               
+## 
+##  Response setups :
+##              Df  Sum Sq Mean Sq F value Pr(&gt;F)
+## team          2   1.525 0.76258   0.584 0.5588
+## Residuals   165 215.438 1.30568               
+## 
+##  Response crosses :
+##              Df  Sum Sq Mean Sq F value Pr(&gt;F)
+## team          2   0.049 0.02438   0.024 0.9763
+## Residuals   165 167.773 1.01680               
+## 
+##  Response passes :
+##              Df  Sum Sq Mean Sq F value   Pr(&gt;F)   
+## team          2  21.152 10.5758  5.6186 0.004359 **
+## Residuals   165 310.580  1.8823                    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+##  Response progressivePasses :
+##              Df  Sum Sq Mean Sq F value Pr(&gt;F)
+## team          2   2.625  1.3125  1.0212 0.3624
+## Residuals   165 212.067  1.2853               
+## 
+##  Response takeons :
+##              Df  Sum Sq Mean Sq F value Pr(&gt;F)
+## team          2   2.939  1.4696  1.1979 0.3044
+## Residuals   165 202.423  1.2268               
+## 
+##  Response progressiveRuns :
+##              Df  Sum Sq Mean Sq F value  Pr(&gt;F)  
+## team          2  13.489  6.7445  3.6404 0.02837 *
+## Residuals   165 305.690  1.8527                  
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+##  Response tackles :
+##              Df Sum Sq Mean Sq F value  Pr(&gt;F)  
+## team          2  12.09  6.0449  4.3273 0.01473 *
+## Residuals   165 230.49  1.3969                  
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+##  Response interceptions :
+##              Df  Sum Sq Mean Sq F value  Pr(&gt;F)  
+## team          2  11.289  5.6447  3.3876 0.03616 *
+## Residuals   165 274.938  1.6663                  
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+##  Response clearances :
+##              Df  Sum Sq Mean Sq F value Pr(&gt;F)
+## team          2   2.745 1.37265  2.1594 0.1186
+## Residuals   165 104.884 0.63566               
+## 
+##  Response blocks :
+##              Df Sum Sq Mean Sq F value Pr(&gt;F)
+## team          2   1.91 0.95508  0.8616 0.4244
+## Residuals   165 182.90 1.10848               
+## 
+##  Response aerials :
+##              Df  Sum Sq Mean Sq F value Pr(&gt;F)
+## team          2   0.785 0.39242  0.3885 0.6787
+## Residuals   165 166.688 1.01023               
+## 
+##  Response expectedGoalsGenerated :
+##              Df  Sum Sq Mean Sq F value Pr(&gt;F)
+## team          2   3.074  1.5369   0.882 0.4159
+## Residuals   165 287.503  1.7424</code></pre>
+<pre class="r"><code>pairwise.t.test(comparisonsfiltering$passes, comparisonsfiltering$team, 
+    p.adj = &quot;none&quot;)</code></pre>
+<pre><code>## 
+##  Pairwise comparisons using t tests with pooled SD 
+## 
+## data:  comparisonsfiltering$passes and comparisonsfiltering$team 
+## 
+##         France Germany
+## Germany 0.083  -      
+## Spain   0.001  0.105  
+## 
+## P value adjustment method: none</code></pre>
+<pre class="r"><code>pairwise.t.test(comparisonsfiltering$progressiveRuns, comparisonsfiltering$team, 
+    p.adj = &quot;none&quot;)</code></pre>
+<pre><code>## 
+##  Pairwise comparisons using t tests with pooled SD 
+## 
+## data:  comparisonsfiltering$progressiveRuns and comparisonsfiltering$team 
+## 
+##         France Germany
+## Germany 0.1253 -      
+## Spain   0.0079 0.2449 
+## 
+## P value adjustment method: none</code></pre>
+<pre class="r"><code>pairwise.t.test(comparisonsfiltering$tackles, comparisonsfiltering$team, 
+    p.adj = &quot;none&quot;)</code></pre>
+<pre><code>## 
+##  Pairwise comparisons using t tests with pooled SD 
+## 
+## data:  comparisonsfiltering$tackles and comparisonsfiltering$team 
+## 
+##         France Germany
+## Germany 0.1041 -      
+## Spain   0.0038 0.1881 
+## 
+## P value adjustment method: none</code></pre>
+<pre class="r"><code>pairwise.t.test(comparisonsfiltering$interceptions, comparisonsfiltering$team, 
+    p.adj = &quot;none&quot;)</code></pre>
+<pre><code>## 
+##  Pairwise comparisons using t tests with pooled SD 
+## 
+## data:  comparisonsfiltering$interceptions and comparisonsfiltering$team 
+## 
+##         France Germany
+## Germany 0.815  -      
+## Spain   0.019  0.034  
+## 
+## P value adjustment method: none</code></pre>
+<p>With my MANOVA, I wanted to test whether the three teams that won one of the last three world cups changed in skill between each four years, as each had very different results each year. I was curious if the quality in team would reflect this variety of performances. As could be seen by my first Manova, there was not a significant difference. I then wondered and tested if there was a significant difference between teams, and there was. After performing univariate anovas and post hoc t tests, I could see more about the data. Passes, progressive runs, tackles, and interceptions were all found to be significant. After conducting my t tests, there were a total of 26 tests done. After adjusting my alpha to take this into account, no factors were significant except Spain in passing (which they are known for!).</p>
+<p>number of tests: 26 total as 1 manova, 14 anovas and 12 t tests a=0.05/26=0.0019</p>
+</div>
+<div id="randomization-test" class="section level1">
+<h1>RANDOMIZATION TEST</h1>
+<pre class="r"><code># win&lt;-comparisonfiltering %&gt;% filter(won==1) %&gt;%
+# select(goals) lose&lt;-comparisonfiltering %&gt;% filter(won==0)
+# %&gt;% select(goals)
+# rando&lt;-data.frame(condition=c(rep(&#39;lose&#39;),rep(&#39;win&#39;)),time=c(lose,win))
+# head(rando)
+# ggplot(comparisonsfiltering,aes(goals,fill=boxTouches))+geom_histogram(bins=)+
+# facet_wrap(~boxTouches,ncol=2)+theme(legend.position=&#39;none&#39;)
+# rand_dist&lt;-vector() for(i in 1:5000){
+# new&lt;-data.frame(goals=sample(comparisonsfiltering$goals),condition=comparisonsfiltering$boxTouches)
+# rand_dist[i]&lt;-mean(new[new$boxTouches==&#39;Good&#39;,]$goals)
+#-mean(new[new$condition==&#39;Bad&#39;,]$goals)}
+# {hist(rand_dist,main=&#39;&#39;,ylab=&#39;&#39;);} mean(rand_dist&gt;18.258 |
+# rand_dist &lt; -18.258)
+
+
+obs_F &lt;- 2.56  #this is our observed F-statistic
+Fs &lt;- replicate(5000, {
+    # do everything in curly braces 5000 times and save the
+    # output
+    new &lt;- comparisonfiltering %&gt;% mutate(goals = sample(goals))  #randomly permute response variable (len)
+    # compute the F-statistic by hand
+    SSW &lt;- new %&gt;% group_by(won) %&gt;% summarize(SSW = sum((goals - 
+        mean(goals))^2)) %&gt;% summarize(sum(SSW)) %&gt;% pull
+    SSB &lt;- new %&gt;% mutate(mean = mean(goals)) %&gt;% group_by(won) %&gt;% 
+        mutate(groupmean = mean(goals)) %&gt;% summarize(SSB = sum((mean - 
+        groupmean)^2)) %&gt;% summarize(sum(SSB)) %&gt;% pull
+    (SSB/2)/(SSW/28)  #compute F statistic (num df = K-1 = 3-1, denom df = N-K = 60-3)
+})
+hist(Fs, prob = T)
+abline(v = obs_F, col = &quot;red&quot;, add = T)</code></pre>
+<p><img src="../../project/project2_files/figure-html/unnamed-chunk-4-1.png" width="768" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>mean(Fs &gt; obs_F)</code></pre>
+<pre><code>## [1] 0</code></pre>
+<p>Since there is a 0 p value for our generated f statistic, the measured f statistic is higher than the 5000 generated ones which means that the number of goals scored definitely differs between those who won and those who didn't. #LINEAR REGRESSION MODEL</p>
+<pre class="r"><code>center_scale &lt;- function(x) {
+    scale(x, scale = FALSE)
+}
+centercomp &lt;- data.frame(comparisonfiltering %&gt;% select(goals, 
+    passes, position) %&gt;% scale())
+# centercomp$position&lt;-comparisonsfiltering$position
+fit &lt;- lm(position ~ goals * passes, data = centercomp)
+summary(fit)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = position ~ goals * passes, data = centercomp)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -1.1543 -0.8872 -0.2858  0.9818  2.0023 
+## 
+## Coefficients:
+##                Estimate Std. Error t value Pr(&gt;|t|)  
+## (Intercept)   0.0002033  0.0763442   0.003   0.9979  
+## goals        -0.1759454  0.0781748  -2.251   0.0257 *
+## passes       -0.0586470  0.0771088  -0.761   0.4480  
+## goals:passes  0.0446216  0.1004900   0.444   0.6576  
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 0.9895 on 164 degrees of freedom
+## Multiple R-squared:  0.03845,    Adjusted R-squared:  0.02086 
+## F-statistic: 2.186 on 3 and 164 DF,  p-value: 0.09169</code></pre>
+<pre class="r"><code>fit2 &lt;- lm(position ~ goals * passes, data = comparisonfiltering)
+summary(fit2)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = position ~ goals * passes, data = comparisonfiltering)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -1.1543 -0.8872 -0.2858  0.9818  2.0023 
+## 
+## Coefficients:
+##                Estimate Std. Error t value Pr(&gt;|t|)  
+## (Intercept)   0.0002033  0.0763442   0.003   0.9979  
+## goals        -0.1759454  0.0781748  -2.251   0.0257 *
+## passes       -0.0586470  0.0771088  -0.761   0.4480  
+## goals:passes  0.0446216  0.1004900   0.444   0.6576  
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 0.9895 on 164 degrees of freedom
+## Multiple R-squared:  0.03845,    Adjusted R-squared:  0.02086 
+## F-statistic: 2.186 on 3 and 164 DF,  p-value: 0.09169</code></pre>
+<pre class="r"><code># centercomp %&gt;% select(position) %&gt;% mutate(if position==1)
+perf = cut(centercomp$position, 3)
+table(perf)</code></pre>
+<pre><code>## perf
+## (-0.974,-0.0802]  (-0.0802,0.811]     (0.811,1.71] 
+##              108                0               60</code></pre>
+<pre class="r"><code># if(position1){position=3 }else if (position&gt;20){position=2
+# }else{position=1}
+ggplot(centercomp, aes(passes, goals, colour = perf)) + geom_smooth(method = &quot;lm&quot;, 
+    se = F, fullrange = T) + geom_point() + geom_vline(xintercept = 0)</code></pre>
+<p><img src="../../project/project2_files/figure-html/unnamed-chunk-5-1.png" width="768" style="display: block; margin: auto;" /></p>
+<pre class="r"><code># modx.values
+
+resids &lt;- fit$residuals
+fitvals &lt;- fit$fitted.values
+ggplot() + geom_point(aes(fitvals, resids)) + geom_hline(yintercept = 0, 
+    col = &quot;red&quot;)</code></pre>
+<p><img src="../../project/project2_files/figure-html/unnamed-chunk-5-2.png" width="768" style="display: block; margin: auto;" /></p>
+<pre class="r"><code># bptest(fit)
+ggplot() + geom_histogram(aes(resids), bins = 20)</code></pre>
+<p><img src="../../project/project2_files/figure-html/unnamed-chunk-5-3.png" width="768" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggplot() + geom_qq(aes(sample = resids)) + geom_qq()</code></pre>
+<p><img src="../../project/project2_files/figure-html/unnamed-chunk-5-4.png" width="768" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ks.test(resids, &quot;pnorm&quot;, sd = sd(resids))</code></pre>
+<pre><code>## 
+##  One-sample Kolmogorov-Smirnov test
+## 
+## data:  resids
+## D = 0.16775, p-value = 0.0001567
+## alternative hypothesis: two-sided</code></pre>
+<pre class="r"><code>coeftest(fit)[, 1:2]</code></pre>
+<pre><code>##                   Estimate Std. Error
+## (Intercept)   0.0002032913 0.07634423
+## goals        -0.1759453881 0.07817478
+## passes       -0.0586470337 0.07710880
+## goals:passes  0.0446216413 0.10048995</code></pre>
+<pre class="r"><code>coeftest(fit, vcov = vcovHC(fit))[, 1:2]</code></pre>
+<pre><code>##                   Estimate Std. Error
+## (Intercept)   0.0002032913 0.07742292
+## goals        -0.1759453881 0.06998004
+## passes       -0.0586470337 0.08213539
+## goals:passes  0.0446216413 0.13819637</code></pre>
+<pre class="r"><code># samp_distn&lt;-replicate(5000, {
+# boot_dat&lt;-boot_dat&lt;-comparisonsfiltering[sample(nrow(comparisonfiltering),replace=TRUE),]
+# fit&lt;-lm(won ~ goals * passing, data=boot_dat) coef(fit) })</code></pre>
+<p>In the linear regression model, I was curious whether offensive stats such as a player's ability to get goals and complete passes would be a significant predictor on the position that their team came in that year. While only looking at the intercepts, it can be seen that both abilities in both goals and passes would bring the team closer to number 1. Interestingly, the interaction between goals and passes was apparently not as conducive to winning the tournament during those three years. As can be seen by the tests of linearity, normality, and homoskedasticity, the data did not meet these assumptions so results must be interpreted with this in mind. There were no significant differences before or after using robust SEs, as the change between is minimal.</p>
+</div>
+<div id="logistic-regression-model" class="section level1">
+<h1>LOGISTIC REGRESSION MODEL</h1>
+<p>Accuracy (2+53)/168 Sensitivity 2/2 Specificity 53/166 Precision 2/115 AUC</p>
+<pre class="r"><code>comparisonfiltering$won &lt;- factor(comparisonfiltering$won)  #make rank a factor
+
+fit3 &lt;- glm(won ~ goals + passes + crosses, data = comparisonfiltering, 
+    family = &quot;binomial&quot;)
+coeftest(fit3)</code></pre>
+<pre><code>## 
+## z test of coefficients:
+## 
+##             Estimate Std. Error z value  Pr(&gt;|z|)    
+## (Intercept) -0.78633    0.16792 -4.6827 2.831e-06 ***
+## goals        0.21285    0.16185  1.3151    0.1885    
+## passes       0.16735    0.18572  0.9011    0.3675    
+## crosses     -0.19004    0.19937 -0.9532    0.3405    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code># original scale (log-odds scale)
+coef(fit3) %&gt;% round(3) %&gt;% data.frame</code></pre>
+<pre><code>##                  .
+## (Intercept) -0.786
+## goals        0.213
+## passes       0.167
+## crosses     -0.190</code></pre>
+<pre class="r"><code># exponentiated (odds scale)
+exp(coef(fit3)) %&gt;% round(3) %&gt;% data.frame</code></pre>
+<pre><code>##                 .
+## (Intercept) 0.456
+## goals       1.237
+## passes      1.182
+## crosses     0.827</code></pre>
+<pre class="r"><code>prob &lt;- predict(fit3, type = &quot;response&quot;)  #get predictions for every student in the dataset
+# pred&lt;-ifelse(prob&gt;.5,1,0)
+table(predict = as.numeric(prob &gt; 0.5), truth = comparisonfiltering$won) %&gt;% 
+    addmargins</code></pre>
+<pre><code>##        truth
+## predict   0   1 Sum
+##     0   113  53 166
+##     1     2   0   2
+##     Sum 115  53 168</code></pre>
+<pre class="r"><code># table(truth=comparisonfiltering$won,
+# prediction=pred)%&gt;%addmargins
+(251 + 27)/400  #accuracy</code></pre>
+<pre><code>## [1] 0.695</code></pre>
+<pre class="r"><code>27/127  #tpr</code></pre>
+<pre><code>## [1] 0.2125984</code></pre>
+<pre class="r"><code>251/273  #tnr</code></pre>
+<pre><code>## [1] 0.9194139</code></pre>
+<pre class="r"><code>comparisonfiltering$logit &lt;- predict(fit3, type = &quot;link&quot;)
+
+comparisonfiltering %&gt;% ggplot() + geom_density(aes(logit, color = won, 
+    fill = won), alpha = 0.4) + theme(legend.position = c(0.85, 
+    0.85)) + geom_vline(xintercept = 0) + xlab(&quot;logit (log-odds)&quot;) + 
+    geom_rug(aes(logit, color = won))</code></pre>
+<p><img src="../../project/project2_files/figure-html/unnamed-chunk-6-1.png" width="768" style="display: block; margin: auto;" /></p>
+<pre class="r"><code># table(predict=as.numeric(comparisonsfiltering$prob&gt;.1),truth=comparisonsfiltering$won)
+
+library(plotROC)  #install.packages(plotROC)
+
+# geom_roc needs true outcome (d, should be 0/1) and
+# predicted probability/logit (m, or just predictor if just
+# one):
+ROCplot &lt;- ggplot(comparisonsfiltering) + geom_roc(aes(d = won, 
+    m = prob), n.cuts = 0)
+
+ROCplot</code></pre>
+<p><img src="../../project/project2_files/figure-html/unnamed-chunk-6-2.png" width="768" style="display: block; margin: auto;" /></p>
+<pre class="r"><code># as soon as you build your ROC curve, you can compute the
+# AUC with
+calc_auc(ROCplot)</code></pre>
+<pre><code>##   PANEL group       AUC
+## 1     1    -1 0.5707957</code></pre>
+<p>With only the intercept coefficient being significant, the goals, passes, and crosses per individual did not have a significant effect on whether the team would win the world cup that year, at least in comparison to two of the other best teams in the world. Goals and passes, if significant, would have brought the team closer to winning whereas crosses had a much lower estimate on winning showing what factored more into getting the gold. With a final AUC of 0.571, our model was not very good at predicting whether or not the team would win from these three factors.</p>
+<pre class="r"><code># LEAVE THIS CHUNK ALONE!
+library(knitr)
+opts_chunk$set(fig.align = &quot;center&quot;, fig.height = 5, message = FALSE, 
+    warning = FALSE, fig.width = 8, tidy.opts = list(width.cutoff = 60), 
+    tidy = TRUE)
+
+# HERE&#39;S THE CLASSIFICAITON DIAGNOSTICS FUNCTION
+class_diag &lt;- function(probs, truth) {
+    tab &lt;- table(factor(probs &gt; 0.5, levels = c(&quot;FALSE&quot;, &quot;TRUE&quot;)), 
+        truth)
+    acc = sum(diag(tab))/sum(tab)
+    sens = tab[2, 2]/colSums(tab)[2]
+    spec = tab[1, 1]/colSums(tab)[1]
+    ppv = tab[2, 2]/rowSums(tab)[2]
+    f1 = 2 * (sens * ppv)/(sens + ppv)
+    
+    if (is.numeric(truth) == FALSE &amp; is.logical(truth) == FALSE) {
+        truth &lt;- as.numeric(truth) - 1
+    }
+    
+    # CALCULATE EXACT AUC
+    ord &lt;- order(probs, decreasing = TRUE)
+    probs &lt;- probs[ord]
+    truth &lt;- truth[ord]
+    
+    TPR = cumsum(truth)/max(1, sum(truth))
+    FPR = cumsum(!truth)/max(1, sum(!truth))
+    
+    dup &lt;- c(probs[-1] &gt;= probs[-length(probs)], FALSE)
+    TPR &lt;- c(0, TPR[!dup], 1)
+    FPR &lt;- c(0, FPR[!dup], 1)
+    
+    n &lt;- length(TPR)
+    auc &lt;- sum(((TPR[-1] + TPR[-n])/2) * (FPR[-1] - FPR[-n]))
+    
+    data.frame(acc, sens, spec, ppv, f1, auc)
+}
+
+fit5 &lt;- glm(won ~ ., data = comparisonfiltering, family = &quot;binomial&quot;, 
+    control = list(maxit = 50))
+prob &lt;- predict(fit5, type = &quot;response&quot;)
+class_diag(prob, comparisonfiltering$won)</code></pre>
+<pre><code>##   acc sens spec ppv f1 auc
+## 1   1    1    1   1  1   1</code></pre>
+<pre class="r"><code>table(predict = as.numeric(prob &gt; 0.5), truth = comparisonsfiltering$won) %&gt;% 
+    addmargins</code></pre>
+<pre><code>##        truth
+## predict   0   1 Sum
+##     0   115   0 115
+##     1     0  53  53
+##     Sum 115  53 168</code></pre>
+<pre class="r"><code>k = 10
+data &lt;- comparisonfiltering %&gt;% sample_frac  #put rows of dataset in random order
+folds &lt;- ntile(1:nrow(data), n = 10)  #create fold labels
+diags &lt;- NULL
+# for(i in 1:k){ train &lt;- data[folds!=i,] #create training
+# set (all but fold i) test &lt;- data[folds==i,] #create test
+# set (just fold i) truth &lt;- test$won #save truth labels from
+# fold i
+# fit&lt;-glm(won~.,data=comparisonfiltering,family=&#39;binomial&#39;,control
+# = list(maxit = 50)) prob&lt;-predict(fit,newdata =
+# test,type=&#39;response&#39;)
+# diags&lt;-rbind(diags,class_diag(prob,truth)) }
+# summarize_all(diags,mean)
+
+
+library(glmnet)
+y &lt;- as.matrix(comparisonfiltering$won)
+comp_preds &lt;- model.matrix(won ~ -1 + ., data = comparisonfiltering)
+head(comp_preds)</code></pre>
+<pre><code>##   playerAbou Diaby playerAlou Diarra playerAndré Schürrle
+## 1                0                 0                    0
+## 2                0                 0                    0
+## 3                0                 0                    0
+## 4                0                 0                    0
+## 5                0                 0                    0
+## 6                0                 0                    0
+##   playerAndré-Pierre Gignac playerAndrés Iniesta playerAntoine Griezmann
+## 1                         0                    0                       1
+## 2                         0                    0                       0
+## 3                         0                    0                       0
+## 4                         0                    0                       0
+## 5                         0                    0                       0
+## 6                         0                    0                       0
+##   playerAntonio Rüdiger playerArne Friedrich playerBacary Sagna
+## 1                     0                    0                  0
+## 2                     0                    0                  0
+## 3                     0                    0                  0
+## 4                     0                    0                  0
+## 5                     0                    0                  0
+## 6                     0                    0                  0
+##   playerBastian Schweinsteiger playerBenedikt Höwedes playerBenjamin Mendy
+## 1                            0                      0                    0
+## 2                            0                      0                    1
+## 3                            0                      0                    0
+## 4                            0                      0                    0
+## 5                            0                      0                    0
+## 6                            0                      0                    0
+##   playerBenjamin Pavard playerBlaise Matuidi playerCacau playerCarles Puyol
+## 1                     0                    0           0                  0
+## 2                     0                    0           0                  0
+## 3                     1                    0           0                  0
+## 4                     0                    1           0                  0
+## 5                     0                    0           0                  0
+## 6                     0                    0           0                  0
+##   playerCésar Azpilicueta playerCesc Fàbregas playerChristoph Kramer
+## 1                       0                   0                      0
+## 2                       0                   0                      0
+## 3                       0                   0                      0
+## 4                       0                   0                      0
+## 5                       0                   0                      0
+## 6                       0                   0                      0
+##   playerCorentin Tolisso playerDani Carvajal playerDavid De Gea
+## 1                      0                   0                  0
+## 2                      0                   0                  0
+## 3                      0                   0                  0
+## 4                      0                   0                  0
+## 5                      1                   0                  0
+## 6                      0                   0                  0
+##   playerDavid Silva playerDavid Villa playerDennis Aogo playerDiego Costa
+## 1                 0                 0                 0                 0
+## 2                 0                 0                 0                 0
+## 3                 0                 0                 0                 0
+## 4                 0                 0                 0                 0
+## 5                 0                 0                 0                 0
+## 6                 0                 0                 0                 0
+##   playerDjibril Cissé playerDjibril Sidibé playerEric Abidal
+## 1                   0                    0                 0
+## 2                   0                    0                 0
+## 3                   0                    0                 0
+## 4                   0                    0                 0
+## 5                   0                    0                 0
+## 6                   0                    1                 0
+##   playerFernando Llorente playerFernando Torres playerFlorent Malouda
+## 1                       0                     0                     0
+## 2                       0                     0                     0
+## 3                       0                     0                     0
+## 4                       0                     0                     0
+## 5                       0                     0                     0
+## 6                       0                     0                     0
+##   playerFranck Ribéry playerGaël Clichy playerGerard Piqué playerHans-Jörg Butt
+## 1                   0                 0                  0                    0
+## 2                   0                 0                  0                    0
+## 3                   0                 0                  0                    0
+## 4                   0                 0                  0                    0
+## 5                   0                 0                  0                    0
+## 6                   0                 0                  0                    0
+##   playerHolger Badstuber playerHugo Lloris playerIago Aspas playerIker Casillas
+## 1                      0                 0                0                   0
+## 2                      0                 0                0                   0
+## 3                      0                 0                0                   0
+## 4                      0                 0                0                   0
+## 5                      0                 0                0                   0
+## 6                      0                 0                0                   0
+##   playerIlkay Gündogan playerIsco playerJavi Martínez playerJérémy Toulalan
+## 1                    0          0                   0                     0
+## 2                    0          0                   0                     0
+## 3                    0          0                   0                     0
+## 4                    0          0                   0                     0
+## 5                    0          0                   0                     0
+## 6                    0          0                   0                     0
+##   playerJérôme Boateng playerJesús Navas playerJoan Capdevila
+## 1                    0                 0                    0
+## 2                    0                 0                    0
+## 3                    0                 0                    0
+## 4                    0                 0                    0
+## 5                    0                 0                    0
+## 6                    0                 0                    0
+##   playerJonas Hector playerJordi Alba playerJoshua Kimmich playerJuan Mata
+## 1                  0                0                    0               0
+## 2                  0                0                    0               0
+## 3                  0                0                    0               0
+## 4                  0                0                    0               0
+## 5                  0                0                    0               0
+## 6                  0                0                    0               0
+##   playerJuanfran playerJulian Brandt playerJulian Draxler playerKarim Benzema
+## 1              0                   0                    0                   0
+## 2              0                   0                    0                   0
+## 3              0                   0                    0                   0
+## 4              0                   0                    0                   0
+## 5              0                   0                    0                   0
+## 6              0                   0                    0                   0
+##   playerKoke playerKylian Mbappé playerLaurent Koscielny playerLeon Goretzka
+## 1          0                   0                       0                   0
+## 2          0                   0                       0                   0
+## 3          0                   0                       0                   0
+## 4          0                   0                       0                   0
+## 5          0                   0                       0                   0
+## 6          0                   0                       0                   0
+##   playerLoïc Rémy playerLucas Digne playerLucas Hernández playerLucas Vázquez
+## 1               0                 0                     0                   0
+## 2               0                 0                     0                   0
+## 3               0                 0                     0                   0
+## 4               0                 0                     0                   0
+## 5               0                 0                     0                   0
+## 6               0                 0                     0                   0
+##   playerLukas Podolski playerMamadou Sakho playerManuel Neuer
+## 1                    0                   0                  0
+## 2                    0                   0                  0
+## 3                    0                   0                  0
+## 4                    0                   0                  0
+## 5                    0                   0                  0
+## 6                    0                   0                  0
+##   playerMarcell Jansen playerMarco Asensio playerMarco Reus playerMario Gómez
+## 1                    0                   0                0                 0
+## 2                    0                   0                0                 0
+## 3                    0                   0                0                 0
+## 4                    0                   0                0                 0
+## 5                    0                   0                0                 0
+## 6                    0                   0                0                 0
+##   playerMario Götze playerMarko Marin playerMarvin Plattenhardt
+## 1                 0                 0                         0
+## 2                 0                 0                         0
+## 3                 0                 0                         0
+## 4                 0                 0                         0
+## 5                 0                 0                         0
+## 6                 0                 0                         0
+##   playerMathieu Debuchy playerMathieu Valbuena playerMats Hummels
+## 1                     0                      0                  0
+## 2                     0                      0                  0
+## 3                     0                      0                  0
+## 4                     0                      0                  0
+## 5                     0                      0                  0
+## 6                     0                      0                  0
+##   playerMesut Özil playerMiroslav Klose playerMorgan Schneiderlin
+## 1                0                    0                         0
+## 2                0                    0                         0
+## 3                0                    0                         0
+## 4                0                    0                         0
+## 5                0                    0                         0
+## 6                0                    0                         0
+##   playerMoussa Sissoko playerN&#39;Golo Kanté playerNabil Fekir playerNacho
+## 1                    0                  0                 0           0
+## 2                    0                  0                 0           0
+## 3                    0                  0                 0           0
+## 4                    0                  0                 0           0
+## 5                    0                  0                 0           0
+## 6                    0                  0                 0           0
+##   playerNicolas Anelka playerNiklas Süle playerOlivier Giroud
+## 1                    0                 0                    0
+## 2                    0                 0                    0
+## 3                    0                 0                    0
+## 4                    0                 0                    0
+## 5                    0                 0                    0
+## 6                    0                 0                    0
+##   playerOusmane Dembélé playerPatrice Evra playerPaul Pogba playerPedro
+## 1                     0                  0                0           0
+## 2                     0                  0                0           0
+## 3                     0                  0                0           0
+## 4                     0                  0                0           0
+## 5                     0                  0                0           0
+## 6                     0                  0                0           0
+##   playerPepe Reina playerPer Mertesacker playerPhilipp Lahm
+## 1                0                     0                  0
+## 2                0                     0                  0
+## 3                0                     0                  0
+## 4                0                     0                  0
+## 5                0                     0                  0
+## 6                0                     0                  0
+##   playerPiotr Trochowski playerPresnel Kimpembe playerRaphaël Varane
+## 1                      0                      0                    0
+## 2                      0                      0                    0
+## 3                      0                      0                    0
+## 4                      0                      0                    0
+## 5                      0                      0                    0
+## 6                      0                      0                    0
+##   playerRaúl Albiol playerRodrigo playerSami Khedira playerSamuel Umtiti
+## 1                 0             0                  0                   0
+## 2                 0             0                  0                   0
+## 3                 0             0                  0                   0
+## 4                 0             0                  0                   0
+## 5                 0             0                  0                   0
+## 6                 0             0                  0                   0
+##   playerSanti Cazorla playerSebastian Rudy playerSébastien Squillaci
+## 1                   0                    0                         0
+## 2                   0                    0                         0
+## 3                   0                    0                         0
+## 4                   0                    0                         0
+## 5                   0                    0                         0
+## 6                   0                    0                         0
+##   playerSergio Busquets playerSergio Ramos playerShkodran Mustafi
+## 1                     0                  0                      0
+## 2                     0                  0                      0
+## 3                     0                  0                      0
+## 4                     0                  0                      0
+## 5                     0                  0                      0
+## 6                     0                  0                      0
+##   playerSidney Govou playerSteve Mandanda playerSteven N&#39;Zonzi playerThiago
+## 1                  0                    0                    0            0
+## 2                  0                    0                    0            0
+## 3                  0                    0                    0            0
+## 4                  0                    0                    0            0
+## 5                  0                    0                    0            0
+## 6                  0                    0                    0            0
+##   playerThierry Henry playerThomas Lemar playerThomas Müller playerTimo Werner
+## 1                   0                  0                   0                 0
+## 2                   0                  0                   0                 0
+## 3                   0                  0                   0                 0
+## 4                   0                  0                   0                 0
+## 5                   0                  0                   0                 0
+## 6                   0                  0                   0                 0
+##   playerToni Kroos playerWilliam Gallas playerXabi Alonso playerXavi
+## 1                0                    0                 0          0
+## 2                0                    0                 0          0
+## 3                0                    0                 0          0
+## 4                0                    0                 0          0
+## 5                0                    0                 0          0
+## 6                0                    0                 0          0
+##   playerYoann Gourcuff playerYohan Cabaye season teamGermany teamSpain
+## 1                    0                  0   2018           0         0
+## 2                    0                  0   2018           0         0
+## 3                    0                  0   2018           0         0
+## 4                    0                  0   2018           0         0
+## 5                    0                  0   2018           0         0
+## 6                    0                  0   2018           0         0
+##        goals     setups    crosses boxTouches     passes progressivePasses
+## 1  3.1723115  3.3432748  1.1139301  0.7034615 -0.1309234        -0.4864443
+## 2 -0.4801202 -0.6749216  0.1163808 -0.8872253 -1.0249193        -0.9097863
+## 3  0.4399580 -0.3327608  0.4455720 -0.5220166  0.3160745         0.8805975
+## 4 -0.4801202 -0.4117210 -0.5519773 -0.2704283 -0.6417782        -0.5834602
+## 5 -0.4801202 -0.5871881 -0.5519773 -0.6762158 -0.5211597        -0.4864443
+## 6 -0.4801202 -0.6749216 -0.2128105 -0.8304150 -0.6772542        -0.5570013
+##      takeons progressiveRuns    tackles interceptions clearances     blocks
+## 1  0.6199160     -0.19056509  0.5179785  -0.526868396 -0.4410160 -0.4579282
+## 2 -0.6606032     -0.66796810 -0.9506149  -0.824766371 -0.6652313 -0.4579282
+## 3 -0.3449823     -0.05313089  0.9992125  -0.007456543  2.1872852 -0.1157127
+## 4 -0.6606032     -0.66796810 -0.2453582  -0.228970421 -0.5531236 -0.4579282
+## 5 -0.4982839     -0.53053390 -0.7265922   0.206418926 -0.2168007 -0.4579282
+## 6 -0.6606032     -0.53053390 -0.6353237  -0.228970421 -0.6652313 -0.4579282
+##      aerials expectedGoalsGenerated   position      logit
+## 1 -0.2441191              0.5828812 -0.9717746 -0.3447176
+## 2 -0.8632438             -0.5239478 -0.9717746 -1.0821587
+## 3  0.1353444             -0.3116792 -0.9717746 -0.7244679
+## 4 -0.1143027             -0.6225011 -0.9717746 -0.8910247
+## 5 -0.6135968             -0.4405566 -0.9717746 -0.8708392
+## 6 -0.4937662             -0.5694340 -0.9717746 -0.9614171</code></pre>
+<pre class="r"><code>x &lt;- scale(comp_preds)
+
+cv &lt;- cv.glmnet(comp_preds, y, family = &quot;binomial&quot;)
+lasso_fit &lt;- glmnet(comp_preds, y, family = &quot;binomial&quot;, lambda = cv$lambda.1se)
+coef(lasso_fit)</code></pre>
+<pre><code>## 140 x 1 sparse Matrix of class &quot;dgCMatrix&quot;
+##                                         s0
+## (Intercept)                  -2.893392e+03
+## playerAbou Diaby              .           
+## playerAlou Diarra             .           
+## playerAndré Schürrle          6.357793e-01
+## playerAndré-Pierre Gignac     .           
+## playerAndrés Iniesta          .           
+## playerAntoine Griezmann       .           
+## playerAntonio Rüdiger         .           
+## playerArne Friedrich         -8.876998e-01
+## playerBacary Sagna            .           
+## playerBastian Schweinsteiger  .           
+## playerBenedikt Höwedes        5.448521e-01
+## playerBenjamin Mendy          .           
+## playerBenjamin Pavard         .           
+## playerBlaise Matuidi          .           
+## playerCacau                  -7.075945e-01
+## playerCarles Puyol            .           
+## playerCésar Azpilicueta       .           
+## playerCesc Fàbregas           .           
+## playerChristoph Kramer        7.747901e-01
+## playerCorentin Tolisso        .           
+## playerDani Carvajal           .           
+## playerDavid De Gea            .           
+## playerDavid Silva             .           
+## playerDavid Villa             .           
+## playerDennis Aogo            -7.215876e-01
+## playerDiego Costa             .           
+## playerDjibril Cissé           .           
+## playerDjibril Sidibé          .           
+## playerEric Abidal             .           
+## playerFernando Llorente       1.958316e-02
+## playerFernando Torres         .           
+## playerFlorent Malouda         .           
+## playerFranck Ribéry           .           
+## playerGaël Clichy             .           
+## playerGerard Piqué            .           
+## playerHans-Jörg Butt         -6.691336e-01
+## playerHolger Badstuber       -7.819101e-01
+## playerHugo Lloris             .           
+## playerIago Aspas              .           
+## playerIker Casillas           .           
+## playerIlkay Gündogan          .           
+## playerIsco                    .           
+## playerJavi Martínez           .           
+## playerJérémy Toulalan         .           
+## playerJérôme Boateng          .           
+## playerJesús Navas             .           
+## playerJoan Capdevila          .           
+## playerJonas Hector            .           
+## playerJordi Alba              .           
+## playerJoshua Kimmich          .           
+## playerJuan Mata               .           
+## playerJuanfran                .           
+## playerJulian Brandt           .           
+## playerJulian Draxler          .           
+## playerKarim Benzema           .           
+## playerKoke                    .           
+## playerKylian Mbappé           .           
+## playerLaurent Koscielny       .           
+## playerLeon Goretzka           .           
+## playerLoïc Rémy               .           
+## playerLucas Digne             .           
+## playerLucas Hernández         .           
+## playerLucas Vázquez           .           
+## playerLukas Podolski          .           
+## playerMamadou Sakho           .           
+## playerManuel Neuer            .           
+## playerMarcell Jansen         -7.425580e-01
+## playerMarco Asensio           .           
+## playerMarco Reus              .           
+## playerMario Gómez            -3.248070e-01
+## playerMario Götze             6.357979e-01
+## playerMarko Marin            -6.691076e-01
+## playerMarvin Plattenhardt     .           
+## playerMathieu Debuchy         .           
+## playerMathieu Valbuena        .           
+## playerMats Hummels            2.381641e-01
+## playerMesut Özil              .           
+## playerMiroslav Klose          .           
+## playerMorgan Schneiderlin     .           
+## playerMoussa Sissoko          .           
+## playerN&#39;Golo Kanté            .           
+## playerNabil Fekir             .           
+## playerNacho                   .           
+## playerNicolas Anelka          .           
+## playerNiklas Süle             .           
+## playerOlivier Giroud          .           
+## playerOusmane Dembélé         .           
+## playerPatrice Evra            .           
+## playerPaul Pogba              .           
+## playerPedro                   .           
+## playerPepe Reina              .           
+## playerPer Mertesacker         .           
+## playerPhilipp Lahm            .           
+## playerPiotr Trochowski       -7.005913e-01
+## playerPresnel Kimpembe        .           
+## playerRaphaël Varane          .           
+## playerRaúl Albiol             .           
+## playerRodrigo                 .           
+## playerSami Khedira            .           
+## playerSamuel Umtiti           .           
+## playerSanti Cazorla           .           
+## playerSebastian Rudy          .           
+## playerSébastien Squillaci     .           
+## playerSergio Busquets         .           
+## playerSergio Ramos            .           
+## playerShkodran Mustafi        7.573128e-01
+## playerSidney Govou            .           
+## playerSteve Mandanda          .           
+## playerSteven N&#39;Zonzi          .           
+## playerThiago                  .           
+## playerThierry Henry           .           
+## playerThomas Lemar            .           
+## playerThomas Müller           .           
+## playerTimo Werner             .           
+## playerToni Kroos              .           
+## playerWilliam Gallas          .           
+## playerXabi Alonso             .           
+## playerXavi                    .           
+## playerYoann Gourcuff          .           
+## playerYohan Cabaye            .           
+## season                        1.425772e+00
+## teamGermany                  -6.142095e-01
+## teamSpain                     5.840255e+00
+## goals                         .           
+## setups                        .           
+## crosses                       .           
+## boxTouches                    .           
+## passes                        .           
+## progressivePasses             .           
+## takeons                       .           
+## progressiveRuns               .           
+## tackles                       1.052056e-01
+## interceptions                 .           
+## clearances                    .           
+## blocks                        .           
+## aerials                       .           
+## expectedGoalsGenerated        .           
+## position                     -2.899432e+01
+## logit                         .</code></pre>
+<pre class="r"><code>k = 10
+comp &lt;- comparisonfiltering %&gt;% mutate(Andre = ifelse(comparisonfiltering$player == 
+    &quot;André Schürrle&quot;, 1, 0), Arne = ifelse(comparisonfiltering$player == 
+    &quot;Arne Friedrich&quot;, 1, 0), Benedikt = ifelse(comparisonfiltering$player == 
+    &quot;Benedikt Höwedes&quot;, 1, 0), Cacau = ifelse(comparisonfiltering$player == 
+    &quot;Cacau&quot;, 1, 0), Christoph = ifelse(comparisonfiltering$player == 
+    &quot;Christoph Kramer&quot;, 1, 0), Dennis = ifelse(comparisonfiltering$player == 
+    &quot;Dennis Aogo&quot;, 1, 0), Fernando = ifelse(comparisonfiltering$player == 
+    &quot;Fernando Llorente&quot;, 1, 0), Jorg = ifelse(comparisonfiltering$player == 
+    &quot;Jörg Butt&quot;, 1, 0), Holger = ifelse(comparisonfiltering$player == 
+    &quot;Holger Badstuber&quot;, 1, 0), Jesus = ifelse(comparisonfiltering$player == 
+    &quot;Jesús Navas&quot;, 1, 0), Marcell = ifelse(comparisonfiltering$player == 
+    &quot;Marcell Jansen&quot;, 1, 0), Mario = ifelse(comparisonfiltering$player == 
+    &quot;Mario Gómez&quot;, 1, 0), Gotze = ifelse(comparisonfiltering$player == 
+    &quot;Mario Götze&quot;, 1, 0), Marko = ifelse(comparisonfiltering$player == 
+    &quot;Marko Marin&quot;, 1, 0), Hummels = ifelse(comparisonfiltering$player == 
+    &quot;Mats Hummels&quot;, 1, 0), Piotr = ifelse(comparisonfiltering$player == 
+    &quot;Piotr Trochowski&quot;, 1, 0), Shkodran = ifelse(comparisonfiltering$player == 
+    &quot;Shkodran Mustafi&quot;, 1, 0), German = ifelse(comparisonfiltering$team == 
+    &quot;Germany&quot;, 1, 0), Span = ifelse(comparisonfiltering$team == 
+    &quot;Spain&quot;, 1, 0))
+data &lt;- comp[sample(nrow(comp)), ]
+folds &lt;- cut(seq(1:nrow(comp)), breaks = k, labels = F)
+diags &lt;- NULL
+for (i in 1:k) {
+    train &lt;- data[folds != i, ]
+    test &lt;- data[folds == i, ]
+    truth &lt;- test$won
+    fit &lt;- glm(won ~ Andre + Arne + Benedikt + Cacau + Christoph + 
+        Dennis + Fernando + Jorg + Holger + Jesus + Marcell + 
+        Mario + Gotze + Marko + Hummels + Piotr + Shkodran + 
+        German + Span + season + tackles, data = comp, family = &quot;binomial&quot;)
+    probs &lt;- predict(fit, newdata = test, type = &quot;response&quot;)
+    diags &lt;- rbind(diags, class_diag(probs, truth))
+}
+summarize_all(diags, mean)</code></pre>
+<pre><code>##         acc      sens      spec ppv  f1       auc
+## 1 0.7202206 0.1087302 0.9923077 NaN NaN 0.7051306</code></pre>
+<p>Using all of the variables, the fit was perfect and guessed correctly who won 100% of the time. Once I used lasso to find the factors that were most significant as predictors, the model had an auc of 0.673 which was a step up from the AUC calculated in the beginning. The factors that were determined to be significant were a few different players, which team they were, as well as the season they were playing and how good the players were at tackling.</p>
 </div>
 
             
