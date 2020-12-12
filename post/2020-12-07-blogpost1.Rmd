@@ -34,9 +34,14 @@ In addition to World Markets Energy information  <http://esource.enron.com/world
 <http://ad.doubleclick.net/clk;3549492;6600300;c?http://www.sportingbetusa.com/english/casino/casinonew-fr.asp?isLogged=notlogged> A WEEKEND PAIR-A-DICE <http://ad.doubleclick.net/clk;3549492;6600300;c?http://www.sportingbetusa.c \
 Mr. Skilling:  Your P number is P00500599.  For your convenience, you can also go to http://isc.enron.com/site/ under"
 
-
+URLS=re.findall(r'http://[\'"]?[^\>" "]+',string4)
 re.findall(r'http://[\'"]?[^\>" "]+',string4)
 ```
-First, it recieves a large amount of text, and traversese the entirety of it while printing the determined website urls.
+First, it recieves a large amount of text, and traversese the entirety of it while printing the determined website urls. This list of URLs is saved into a variable called URLS.
 
+```{r}
+library(reticulate)
+nchar(py$URLS, type ="chars")
+```
 
+Then using reticulate this python variable can be accessed in R, where the number of characters in each URL are then printed.

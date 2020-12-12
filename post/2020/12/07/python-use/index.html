@@ -96,10 +96,14 @@ In addition to World Markets Energy information  &lt;http://esource.enron.com/wo
 &lt;http://ad.doubleclick.net/clk;3549492;6600300;c?http://www.sportingbetusa.com/english/casino/casinonew-fr.asp?isLogged=notlogged&gt; A WEEKEND PAIR-A-DICE &lt;http://ad.doubleclick.net/clk;3549492;6600300;c?http://www.sportingbetusa.c \
 Mr. Skilling:  Your P number is P00500599.  For your convenience, you can also go to http://isc.enron.com/site/ under&quot;
 
-
+URLS=re.findall(r&#39;http://[\&#39;&quot;]?[^\&gt;&quot; &quot;]+&#39;,string4)
 re.findall(r&#39;http://[\&#39;&quot;]?[^\&gt;&quot; &quot;]+&#39;,string4)</code></pre>
 <pre><code>## [&#39;http://www.classmates.com/go/e/200988231/CC123101BT/CM00&#39;, &#39;http://graphics.classmates.com/graphics/spacer.gif&#39;, &#39;http://graphics.classmates.com/graphics/sp&#39;, &#39;http://itcapps.corp.enron.com/srrs/auth/emailLink.asp?ID=000000000053239&amp;Page=Approval&#39;, &#39;http://www.enrononline.com.&#39;, &#39;http://www.classmates.com/go/e/200988231/CC122401BC/CM00&#39;, &#39;http://graphics.classmates.com/graphics/spacer.gif&#39;, &#39;http://graphics.classmates.com/graphics/sphttp://www.btinternet.com/~pir8/arnie/n,&#39;, &#39;http://zzz1.net/rd/rd.asp?ZXU=562&amp;ZXD=1471085&amp;UID=1471085&#39;, &#39;http://www.egroups.com&#39;, &#39;http://isc.enron.com/site/doclibrary/user/&#39;, &#39;http://esource.enron.com/worldmarket.asp&#39;, &#39;http://esource.enron.com/worldmarket_CountryAnalysis.asp&#39;, &#39;http://ad.doubleclick.net/clk;3549492;6600300;c?http://www.sportingbetusa.com/english/casino/casinonew-fr.asp?isLogged=notlogged&#39;, &#39;http://ad.doubleclick.net/clk;3549492;6600300;c?http://www.sportingbetusa.c&#39;, &#39;http://isc.enron.com/site/&#39;]</code></pre>
-<p>First, it recieves a large amount of text, and traversese the entirety of it while printing the determined website urls.</p>
+<p>First, it recieves a large amount of text, and traversese the entirety of it while printing the determined website urls. This list of URLs is saved into a variable called URLS.</p>
+<pre class="r"><code>library(reticulate)
+nchar(py$URLS, type =&quot;chars&quot;)</code></pre>
+<pre><code>##  [1]  56  50  42  86  27  56  50  82  57  22  42  40  56 128  75  26</code></pre>
+<p>Then using reticulate this python variable can be accessed in R, where the number of characters in each URL are then printed.</p>
 
             
         <hr>         <div class="related-posts">
