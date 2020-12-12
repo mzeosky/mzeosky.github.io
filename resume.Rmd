@@ -9,3 +9,5 @@ hidediscus: true
 <center>
 <iframe src="/resume.pdf" width="100%" height="800" border="0"></iframe>
 </center>
+
+This is my resume

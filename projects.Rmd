@@ -6,12 +6,12 @@ hiderelated: true
 hidediscus: true
 ---
 
-Check out some of my R coding projects below:
+Check out some of my coding projects below:
 
 
-<i class="fa fa-signal"></i> &nbsp; [Predictions vs. Performance in the World Cup](/project/project1/)
+<i class="fa fa-signal"></i> &nbsp; [Effect of Football Predictions on Performance](/project/project1/)
 
-<i class="fa fa-line-chart"></i> &nbsp; [Comparing the Performance of the Last 3 World Cup Winners](/project/project2/)
+<i class="fa fa-line-chart"></i> &nbsp; [Comparisons of the Performances Between the Three Last World Cup Champions](/project/project2/)
 
 <!--
 <i class="fa fa-pie-chart"></i> 

@@ -9,6 +9,8 @@ categories: []
 ---
 Throughout Computational Biology I have been primarily strengthening my understanding of using the language R, which can be seen in these two projects linked on my site.
 
+![](/post/2020-12-07-blogpost1_files/austinfc.png){width=20% height=20%}
+
 [Link to project 1](/project/project1/)
 
 [Link to project 2](/project/project2/)
@@ -36,3 +38,5 @@ Mr. Skilling:  Your P number is P00500599.  For your convenience, you can also g
 re.findall(r'http://[\'"]?[^\>" "]+',string4)
 ```
 First, it recieves a large amount of text, and traversese the entirety of it while printing the determined website urls.
+
+

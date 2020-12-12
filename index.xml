@@ -14,7 +14,7 @@
       
       <guid>/post/2020/12/07/python-use/</guid>
       <description>Throughout Computational Biology I have been primarily strengthening my understanding of using the language R, which can be seen in these two projects linked on my site.
-Link to project 1
+ Link to project 1
 Link to project 2
 However, more recently I have been learning how to tie in Python as well in order to complement both languages. Something we have recently been learning about is regular expressions and how to use them to search through large amounts of data, which can be seen below.</description>
     </item>
@@ -44,8 +44,8 @@ However, more recently I have been learning how to tie in Python as well in orde
       
       <guid>/projects/</guid>
       <description> Check out some of my coding projects below:
- Wrangling &amp;amp; Exploratory Data Analysis
- Modeling, Inference, Prediction
+ Effect of Football Predictions on Performance
+ Comparisons of the Performances Between the Three Last World Cup Champions
   -- </description>
     </item>
     
@@ -55,7 +55,7 @@ However, more recently I have been learning how to tie in Python as well in orde
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>/resume/</guid>
-      <description>    </description>
+      <description>This is my resume</description>
     </item>
     
   </channel>
